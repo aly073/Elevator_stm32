@@ -48,18 +48,23 @@ Follow these steps once to configure the debugger correctly:
 
 ---
 
+## Project Conifguration
+1. right click registers.inc
+2. select options for file
+3. in file type select assembly language file
+4. click ok
+
+---
+
 ## Project Structure
 
 ```
 ├── main.s                          # Application entry point (Assembly)
+├── lib.s                           # file for all basic reusable functions such as delay
+├── registers.inc                   # All register addresses
+├── config                          # Stores the config function where all pins are initialised
 ├── Elevator_stm32.uvprojx          # Keil project file
-├── RTE/
-│   ├── _Target_1/
-│   │   └── RTE_Components.h        # RTE component configuration
-│   └── Device/STM32F103C8/
-│       ├── RTE_Device.h            # Device peripheral configuration
-│       ├── startup_stm32f10x_md.s  # Device startup code
-│       └── system_stm32f10x.c      # System clock initialization
+├── RTE/                            # Folder for stm32 initialisation
 └── .gitignore
 ```
 
