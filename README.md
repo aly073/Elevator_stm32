@@ -14,15 +14,9 @@
 ### Requirements
 
 - [Keil µVision 5](https://www.keil.com/download/product/)
-- ST-Link V2 driver
 - STM32F1xx device pack (installed via Keil Pack Installer)
 
-### Clone the Repository
-
-```bash
-git clone <repo-url>
-cd <repo-folder>
-```
+---
 
 Open `Elevator_stm32.uvprojx` in Keil µVision.
 
@@ -32,7 +26,7 @@ Open `Elevator_stm32.uvprojx` in Keil µVision.
 
 Follow these steps once to configure the debugger correctly:
 
-1. Go to **Project → Options for Target** (or press `Alt+F7`)
+1. Go to **Project → Options for Target**
 2. Select the **Debug** tab
 3. Choose **ST-Link Debugger** from the dropdown on the right side
 4. Click **Settings** next to it
@@ -43,8 +37,6 @@ Follow these steps once to configure the debugger correctly:
    - ✅ Reset and Run
 7. Switch to the **Pack** tab and **uncheck** `Enable`
 8. Click **OK** to save
-
-> **Why "Under Reset"?** The STM32F103C8T6 can sometimes fail to connect if the firmware is already running. Connecting under reset holds the MCU in reset while the debugger attaches, ensuring a reliable connection.
 
 ---
 
@@ -69,11 +61,3 @@ Follow these steps once to configure the debugger correctly:
 ├── Elevator_stm32.csolution        # File for vscode cmsis project
 └── .gitignore
 ```
-
----
-
-## Build & Flash
-
-1. Build the project: **Project → Build Target** (`F7`)
-2. Flash and run: **Debug → Start/Stop Debug Session** (`Ctrl+F5`)
-   - With **Reset and Run** enabled, the MCU will start executing automatically after flashing
