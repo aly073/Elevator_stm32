@@ -65,6 +65,8 @@ Follow these steps once to configure the debugger correctly:
 ├── config                          # Stores the config function where all pins are initialised
 ├── Elevator_stm32.uvprojx          # Keil project file
 ├── RTE/                            # Folder for stm32 initialisation
+├── Elevator_stm32.cproject.yml     # File for vscode cmsis project
+├── Elevator_stm32.csolution        # File for vscode cmsis project
 └── .gitignore
 ```
 

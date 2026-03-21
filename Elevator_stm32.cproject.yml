@@ -1,0 +1,58 @@
+project:
+  packs:
+    - pack: ARM::CMSIS@^6.3.0
+    - pack: Keil::STM32F1xx_DFP@^2.4.1
+    - pack: ARM::CMSIS-NN@^4.0.0
+    - pack: ARM::CMSIS-DSP@^1.10.1
+  setups:
+    - setup: Options for Target_1
+      debug: "on"
+      misc:
+        - C:
+            - -std=c99
+          C-CPP:
+            - -fno-rtti
+            - -funsigned-char
+            - -fshort-enums
+            - -fshort-wchar
+            - -ffunction-sections
+            - -Wall
+            - -Wextra
+            - -Wno-packed
+            - -Wno-reserved-id-macro
+            - -Wno-unused-macros
+            - -Wno-documentation-unknown-command
+            - -Wno-documentation
+            - -Wno-license-management
+            - -Wno-parentheses-equality
+          CPP:
+            - -xc++
+            - -std=c++11
+            - -fno-exceptions
+          ASM:
+            - -masm=auto
+          Link:
+            - --map
+            - --load_addr_map_info
+            - --xref
+            - --callgraph
+            - --symbols
+            - --info sizes
+            - --info totals
+            - --info unused
+            - --info veneers
+            - --strict
+            - --summary_stderr
+            - --info summarysizes
+  linker:
+    - script: Elevator_stm32_Target_1.sct
+  groups:
+    - group: Source Group 1
+      files:
+        - file: main.s
+        - file: lib.s
+        - file: config.s
+        - file: registers.inc
+  components:
+    - component: ARM::CMSIS:CORE
+    - component: Keil::Device:Startup
