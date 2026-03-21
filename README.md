@@ -38,8 +38,6 @@ Follow these steps once to configure the debugger correctly:
 7. Switch to the **Pack** tab and **uncheck** `Enable`
 8. Click **OK** to save
 
-> **Why "Under Reset"?** The STM32F103C8T6 can sometimes fail to connect if the firmware is already running. Connecting under reset holds the MCU in reset while the debugger attaches, ensuring a reliable connection.
-
 ---
 
 ## Project Conifguration
