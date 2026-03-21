@@ -14,15 +14,9 @@
 ### Requirements
 
 - [Keil µVision 5](https://www.keil.com/download/product/)
-- ST-Link V2 driver
 - STM32F1xx device pack (installed via Keil Pack Installer)
 
-### Clone the Repository
-
-```bash
-git clone <repo-url>
-cd <repo-folder>
-```
+---
 
 Open `Elevator_stm32.uvprojx` in Keil µVision.
 
@@ -32,7 +26,7 @@ Open `Elevator_stm32.uvprojx` in Keil µVision.
 
 Follow these steps once to configure the debugger correctly:
 
-1. Go to **Project → Options for Target** (or press `Alt+F7`)
+1. Go to **Project → Options for Target**
 2. Select the **Debug** tab
 3. Choose **ST-Link Debugger** from the dropdown on the right side
 4. Click **Settings** next to it
@@ -67,11 +61,3 @@ Follow these steps once to configure the debugger correctly:
 ├── RTE/                            # Folder for stm32 initialisation
 └── .gitignore
 ```
-
----
-
-## Build & Flash
-
-1. Build the project: **Project → Build Target** (`F7`)
-2. Flash and run: **Debug → Start/Stop Debug Session** (`Ctrl+F5`)
-   - With **Reset and Run** enabled, the MCU will start executing automatically after flashing
