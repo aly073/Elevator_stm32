@@ -61,7 +61,7 @@ to view and write in the registers.inc file, in keil click open and open the fil
 
 ## (Optional) VS Code Setup (windows setup only)
 
-This setup uses CMSIS and CMake tooling in VS Code to build, upload, and debug code. Setup can be a bit annoying, but it works well if you prefer VS Code over Keil.
+This setup uses CMSIS and CMake tooling in VS Code to build, upload, and debug code. Setup can be a bit annoying, but it works well if you prefer VS Code over Keil. Alternatively you can just install the keil assistant extension and arm assembly extension to be able to write code, build, and flash in vscode, but debugging would require using keil.
 
 One important detail: the VS Code CMSIS project files are separate from the Keil project files. To keep them in sync, this repository includes scripts in the `scripts/` folder.
 
@@ -73,12 +73,13 @@ One important detail: the VS Code CMSIS project files are separate from the Keil
 - Keil Assistant extension (optional)
 
 ### Steps
-
-1. Open the project in VS Code.
-2. Install the **Arm Keil Studio Pack (MDK v6)** extension pack.
-3. Install **Keil Assistant** (optional, useful for checking whether the Keil project is synced with CMSIS).
-4. Open the CMSIS view in the sidebar and click **Build Solution** (hammer icon).
-5. If the build succeeds, start debugging (bug icon) to upload and run the code on the STM32 target.
+1. Download the vscode project files from the google drive https://drive.google.com/file/d/1x8iBDBBVm7FrahMtdIq_7hUy2PMPQEcU/view?usp=sharing
+2. extract and copy the content of vscode_stm32_setup into the project folder
+3. Open the project in VS Code.
+4. Install the **Arm Keil Studio Pack (MDK v6)** extension pack.
+5. Install **Keil Assistant** (optional, useful for checking whether the Keil project is synced with CMSIS).
+6. Open the CMSIS view in the sidebar and click **Build Solution** (hammer icon).
+7. If the build succeeds, start debugging (bug icon) to upload and run the code on the STM32 target.
 
 ### Syncing Keil and CMSIS Groups
 
