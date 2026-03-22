@@ -55,6 +55,8 @@ CMakeCache.txt
 CMakeFiles/
 compile_commands.json
 *.log
-vcpkg-configuration.json
 .clangd
 scripts/*
+!Elevator_stm32_Target_1.sct
+Objects/*.sct
+out/*

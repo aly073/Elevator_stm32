@@ -59,5 +59,7 @@ Follow these steps once to configure the debugger correctly:
 ├── RTE/                            # Folder for stm32 initialisation
 ├── Elevator_stm32.cproject.yml     # File for vscode cmsis project
 ├── Elevator_stm32.csolution        # File for vscode cmsis project
+├── vcpkg-configuration.json        # More vscode files
+├── Elevator_stm32_Target_1.sct     # Last one
 └── .gitignore
 ```
