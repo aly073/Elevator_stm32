@@ -38,13 +38,8 @@ Follow these steps once to configure the debugger correctly:
 7. Switch to the **Pack** tab and **uncheck** `Enable`
 8. Click **OK** to save
 
----
-
-## Project Configuration
-1. Right-click `registers.inc`.
-2. Select **Options for File**.
-3. In **File Type**, select **Assembly Language File**.
-4. Click **OK**.
+### note
+to view and write in the registers.inc file, in keil click open and open the file normally, do not add it to the source group as it will try to compile the file
 
 ---
 
