@@ -52,7 +52,6 @@ project:
         - file: main.s
         - file: lib.s
         - file: config.s
-        - file: registers.inc
   components:
     - component: ARM::CMSIS:CORE
     - component: Keil::Device:Startup
