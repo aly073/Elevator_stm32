@@ -383,7 +383,7 @@
       <Groups>
         <Group>
           <GroupName>Source Group 1</GroupName>
-          <Files><File><FileName>main.s</FileName><FileType>2</FileType><FilePath>.\main.s</FilePath></File><File><FileName>Definitions.s</FileName><FileType>2</FileType><FilePath>.\Definitions.s</FilePath></File><File><FileName>config.s</FileName><FileType>2</FileType><FilePath>.\config.s</FilePath></File><File><FileName>registers.inc</FileName><FileType>1</FileType><FilePath>.\registers.inc</FilePath></File></Files>
+          <Files><File><FileName>main.s</FileName><FileType>2</FileType><FilePath>.\main.s</FilePath></File><File><FileName>lib.s</FileName><FileType>2</FileType><FilePath>.\lib.s</FilePath></File><File><FileName>config.s</FileName><FileType>2</FileType><FilePath>.\config.s</FilePath></File><File><FileName>registers.inc</FileName><FileType>1</FileType><FilePath>.\registers.inc</FilePath></File></Files>
         </Group>
         
         <Group>
