@@ -52,10 +52,6 @@ to view and write in the registers.inc file, in keil click open and open the fil
 ├── config                          # Stores the config function where all pins are initialised
 ├── Elevator_stm32.uvprojx          # Keil project file
 ├── RTE/                            # Folder for stm32 initialisation
-├── Elevator_stm32.cproject.yml     # File for vscode cmsis project
-├── Elevator_stm32.csolution        # File for vscode cmsis project
-├── vcpkg-configuration.json        # More vscode files
-├── Elevator_stm32_Target_1.sct     # Last one
 └── .gitignore
 ```
 
