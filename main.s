@@ -5,6 +5,7 @@
     GET     registers.inc
     IMPORT  config
     IMPORT  delay_systick
+    IMPORT  set_servo_angle
 
 ;============================================================
 ; Main function
@@ -15,18 +16,27 @@ __main FUNCTION
 	BL		config
 
 main_loop
-    ; 3. Turn LED ON (PC13 is active LOW on Blue Pill)
+    ; Move servo to 180 degrees
+    LDR     R0, =180
+    BL      set_servo_angle
+    BL      delay_systick
+
+    ; Move servo to 0 degrees
+    MOV     R0, #0
+    BL      set_servo_angle
+    BL      delay_systick
+
+    ; Blink onboard LED once per sweep cycle (PC13 active low)
     LDR     R0, =GPIOC_ODR
     LDR     R1, [R0]
     BIC     R1, R1, #(1 << 13)
     STR     R1, [R0]
+
     BL      delay_systick
 
-    ; 4. Turn LED OFF
     LDR     R1, [R0]
     ORR     R1, R1, #(1 << 13)
     STR     R1, [R0]
-    BL      delay_systick
 
     B       main_loop
     ENDFUNC
