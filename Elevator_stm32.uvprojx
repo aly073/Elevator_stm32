@@ -389,6 +389,16 @@
               <FileType>2</FileType>
               <FilePath>.\main.s</FilePath>
             </File>
+            <File>
+              <FileName>lib.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\lib.s</FilePath>
+            </File>
+            <File>
+              <FileName>config.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\config.s</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
