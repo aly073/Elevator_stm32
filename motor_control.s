@@ -37,3 +37,5 @@ GO_UP FUNCTION
         STR     R1, [R0]
         POP{R0-R12, PC}
         ENDFUNC
+
+    END
