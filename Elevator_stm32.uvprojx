@@ -400,6 +400,11 @@
               <FilePath>.\config.s</FilePath>
             </File>
             <File>
+              <FileName>elevator.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\elevator.s</FilePath>
+            </File>
+            <File>
               <FileName>animation.s</FileName>
               <FileType>2</FileType>
               <FilePath>.\animation.s</FilePath>

@@ -9,7 +9,7 @@ GO_DOWN FUNCTION
         ; === Set direction  Go DOWN
         LDR     R0, =GPIOB_ODR
 		;LDR     R2,[R0]
-        LDR     R1, =0x2063  ; 0010 0000 0110 0011; PB12=0, PB13=1 (Motor Reverse)
+        LDR     R1, =0x0863  ; 0000 1000 0110 0011; PB10=0, PB11=1 (Motor Reverse)
 		;ORR     R2, R2, R1
         STR     R1, [R0]
         POP{R0-R12, PC}
@@ -20,7 +20,7 @@ STOP FUNCTION
         ; === Set direction STOP
         LDR     R0, =GPIOB_ODR
 		LDR     R2,[R0]
-        LDR     R1, =0x0063  ; 0000 0000 0110 0011 PB12=0, PB13=0 (Motor stop)
+        LDR     R1, =0x0063  ; 0000 0000 0110 0011 PB10=0, PB11=0 (Motor stop)
 		AND     R2, R2, R1
         STR     R2, [R0]
         POP{R0-R12, PC}
@@ -32,7 +32,7 @@ GO_UP FUNCTION
         ; === Set direction  Go UP
         LDR     R0, =GPIOB_ODR
 		;LDR     R2,[R0]
-		LDR     R1, =0x1063 ; 0001 0000 0110 0011; PB12=1, PB13=0 (Motor forward)
+		LDR     R1, =0x0463 ; 0000 0100 0110 0011; PB10=1, PB11=0 (Motor forward)
 		;ORR     R2, R2, R1
         STR     R1, [R0]
         POP{R0-R12, PC}
