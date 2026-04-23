@@ -154,10 +154,12 @@ config	FUNCTION
     BIC     R1, R1, #0xF
     ORR     R1, R1, #0xB
     STR     R1, [R0]
-	
-	LDR     R0, =0x4002101C    ; RCC_APB1ENR 
-    LDR     R1, =0x00000002    ; TIM3EN
-    STR     R1, [R0]
+
+    LDR R0, =RCC_APB1ENR
+    LDR R1, [R0]
+    ORR R1, R1, #0x02    ; Use ORR instead of STR to keep TIM2 running
+    STR R1, [R0]
+
     
 	
 	; TIM3 Configuration
