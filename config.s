@@ -13,6 +13,30 @@
     IMPORT  pending_stop
     IMPORT  pending_dir
 
+
+;============================================================
+;   PIN CONNECTIONS:
+;   - PC13: Onboard LED
+;   - PB0: Elevator motor control (TIM3_CH3 PWM output)
+;   - PB10: Elevator up Direction control (GPIO output)
+;   - PB11: Elevator down Direction control (GPIO output)
+;
+;   - Buttons (functional mapping used by IRQ code):
+;     - PA0: Floor 1 request button (EXTI0)
+;     - PA1: Floor 2 up button (EXTI1)
+;     - PA2: Floor 2 down button (EXTI2)
+;     - PA3: Floor 3 request button (EXTI3)
+;     - PB7: Floor 2 car button (inside elevator) (EXTI7)
+;
+;   - Sensors (functional mapping used by IRQ code):
+;     - PB8: Floor 1 sensor (EXTI8)
+;     - PB5: Floor 2 sensor (EXTI5)
+;     - PA6: Floor 3 sensor (EXTI6)
+;
+;   - LED Matrix:
+;     - SPI Pins: PA5 (CLK), PA7 (DIN), PA4 (CS)
+;============================================================
+
 ;============================================================
 ; Configurations for the stm32 pins etc
 ;============================================================

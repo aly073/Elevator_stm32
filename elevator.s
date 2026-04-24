@@ -429,8 +429,9 @@ delay_loop
     BX LR
 
 motor_off_only
+    PUSH {LR}
     BL STOP
-    BX LR
+    POP {PC}
 
     AREA    elevator_data, DATA, READWRITE
     ALIGN   2
