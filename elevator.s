@@ -290,7 +290,7 @@ st_chk3
     STRB R2, [R1, #4]
 
 st_done
-    BL delay_2000ms
+    ; BL delay_2000ms
     POP {PC}
 
 checkNextMove
