@@ -79,7 +79,7 @@ config	FUNCTION
     LDR R1, [R0, #GPIOx_CRH]
     LDR R2, =0x0000FF0F
     BIC R1, R1, R2
-    LDR R2, =0x00003308
+    LDR R2, =0x00007708
     ORR R1, R1, R2
     STR R1, [R0, #GPIOx_CRH]
     
