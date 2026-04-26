@@ -191,11 +191,11 @@ config	FUNCTION
     ; Set prescaler for 1 MHz timer clock (if APB1 = 8 MHz, prescaler = 7)
     LDR     R1, =7
     STRH    R1, [R0, #0x28]    ; TIM3_PSC
-    ; Set auto-reload register for 1 kHz PWM (ARR = 999 for 1 kHz)
+    ; Set auto-reload register for 5 kHz PWM (ARR = 999 for 1 kHz)
     LDR     R1, =199
     STR     R1, [R0, #0x2C]    ; TIM3_ARR
-    ; Duty cycle for Channel 3 (PB0) = 30%
-    LDR     R1, =200
+    ; Duty cycle for Channel 3 (PB0) = 75%
+    LDR     R1, =150 
     STR     R1, [R0, #0x3C]    ; TIM3_CCR3
 	; Set PWM Mode 1 + preload for channel 3
     LDRH    R1, [R0, #0x1C]    ; TIM3_CCMR2
