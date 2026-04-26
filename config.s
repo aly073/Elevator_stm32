@@ -41,9 +41,9 @@
 ; Configurations for the stm32 pins etc
 ;============================================================
 
-config	FUNCTION
-	PUSH    {R0-R12, LR}
-	; Enable clocks for AFIO(Alternate Function I/O, used for alternate function configuration such as interrupts and for pwm signals), GPIOB, GPIOC
+config    FUNCTION
+    PUSH    {R0-R12, LR}
+    ; Enable clocks for AFIO, GPIOB, GPIOC
     LDR     R0, =RCC_APB2ENR
     LDR     R1, [R0]
     ORR     R1, R1, #(1 << 0)
@@ -62,12 +62,15 @@ config	FUNCTION
     ORR R1, R1, #0x01
     STR R1, [R0]
 
+    ; --- GPIOA CONFIGURATION ---
     LDR R0, =GPIOA_BASE
     LDR R1, =0xB8B38888
     STR R1, [R0, #GPIOx_CRL]
     MOV R1, #CS_PIN
+    ORR R1, R1, #(1 << 6)      ; <--- MODIFIED: Set PA6 bit in ODR to activate Pull-Up
     STR R1, [R0, #GPIOx_ODR]
 
+    ; --- GPIOB CONFIGURATION ---
     LDR R0, =GPIOB_BASE
     LDR R1, [R0, #GPIOx_CRL]
     LDR R2, =0xF0F00000
@@ -83,9 +86,10 @@ config	FUNCTION
     ORR R1, R1, R2
     STR R1, [R0, #GPIOx_CRH]
     
-    MOV R1, #0
+    LDR R1, =0x0120            ; <--- MODIFIED: Set Bits 5 (0x20) and 8 (0x0100) for PB5 & PB8 Pull-Up
     STR R1, [R0, #GPIOx_ODR]
 
+    ; --- AFIO EXTI MAPPING ---
     LDR R0, =AFIO_EXTICR2
     LDR R1, =0x1010
     STR R1, [R0]
@@ -93,12 +97,20 @@ config	FUNCTION
     LDR R1, =0x0001
     STR R1, [R0]
 
+    ; --- EXTI EDGE CONFIGURATION ---
     LDR R0, =EXTI_IMR
     LDR R1, =0x01EF
     STR R1, [R0]
+    
     LDR R0, =EXTI_RTSR
+    LDR R1, =0x008F            ; <--- MODIFIED: Rising edge for remaining lines only (0,1,2,3,7)
+    STR R1, [R0]
+    
+    LDR R0, =EXTI_FTSR         ; <--- MODIFIED: Load Falling Trigger Selection Register
+    LDR R1, =0x0160            ; <--- MODIFIED: Falling edge for lines 5, 6, 8
     STR R1, [R0]
 
+    ; --- TIMER 2 CONFIGURATION ---
     LDR R0, =TIM2_BASE
     LDR R1, =7999
     STR R1, [R0, #0x28]
@@ -109,10 +121,11 @@ config	FUNCTION
     MOV R1, #0
     STR R1, [R0, #0x00]
 
+    ; --- NVIC CONFIGURATION ---
     LDR R0, =NVIC_ISER0
     LDR R1, =0x108003C0
     STR R1, [R0]
-
+	
 ;============================================================
 ; INITIAL STATE
 ;============================================================
