@@ -19,7 +19,8 @@ GO_DOWN FUNCTION
         
         ; Apply new state while preserving other bits
         BIC     R2, R2, #DIR_MASK   ; Clear PB10/11
-        ORR     R2, R2, #0x0863     ; Set DOWN state + your base bits
+        LDR     R1, =0x0863
+		ORR     R2, R2, R1		    ; Set DOWN state + your base bits
         STR     R2, [R0]
 
 DONE_DOWN
@@ -53,7 +54,8 @@ GO_UP FUNCTION
         BEQ     DONE_UP             ; Early exit if already going UP
         
         BIC     R2, R2, #DIR_MASK   ; Clear PB10/11
-        ORR     R2, R2, #0x0463     ; Set UP state
+        LDR		R1, =0x0463 
+		ORR     R2, R2,	R1		    ; Set UP state
         STR     R2, [R0]
 
 DONE_UP

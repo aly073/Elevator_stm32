@@ -1,4 +1,4 @@
-AREA    elevator, CODE, READONLY
+	AREA    elevator, CODE, READONLY
     THUMB
     GET     registers.inc
 
