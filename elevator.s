@@ -1,4 +1,4 @@
-    AREA    elevator, CODE, READONLY
+AREA    elevator, CODE, READONLY
     THUMB
     GET     registers.inc
 
@@ -26,56 +26,81 @@
 ; =============================================================================
 ; ELEVATOR LOGIC & INTERRUPTS
 ; =============================================================================
+
 EXTI0_IRQHandler
     PUSH {LR}
     LDR R0, =EXTI_PR
     MOV R1, #(1 << 0)
-    STR R1, [R0]
-    LDR R0, =requests
+    STR R1, [R0]           ; Clear pending bit first
+
+    LDR R0, =requests      ; Check Floor 1 request
+    LDRB R1, [R0, #0]
+    CMP R1, #1
+    BEQ exti0_end          ; Early exit if already requested
+
     MOV R1, #1
     STRB R1, [R0, #0]
     LDR R0, =elevatorState
     LDRB R0, [R0]
     BL checkNextMove
+exti0_end
     POP {PC}
 
 EXTI1_IRQHandler
     PUSH {LR}
     LDR R0, =EXTI_PR
     MOV R1, #(1 << 1)
-    STR R1, [R0]
-    LDR R0, =requests
+    STR R1, [R0]           ; Clear pending bit first
+
+    LDR R0, =requests      ; Check Floor 2 UP request
+    LDRB R1, [R0, #2]
+    CMP R1, #1
+    BEQ exti1_end          ; Early exit if already requested
+
     MOV R1, #1
     STRB R1, [R0, #2]
     LDR R0, =elevatorState
     LDRB R0, [R0]
     BL checkNextMove
+exti1_end
     POP {PC}
 
 EXTI2_IRQHandler
     PUSH {LR}
     LDR R0, =EXTI_PR
     MOV R1, #(1 << 2)
-    STR R1, [R0]
-    LDR R0, =requests
+    STR R1, [R0]           ; Clear pending bit first
+
+    LDR R0, =requests      ; Check Floor 2 DOWN request
+    LDRB R1, [R0, #3]
+    CMP R1, #1
+    BEQ exti2_end          ; Early exit if already requested
+
     MOV R1, #1
     STRB R1, [R0, #3]
     LDR R0, =elevatorState
     LDRB R0, [R0]
     BL checkNextMove
+exti2_end
     POP {PC}
 
 EXTI3_IRQHandler
     PUSH {LR}
     LDR R0, =EXTI_PR
     MOV R1, #(1 << 3)
-    STR R1, [R0]
-    LDR R0, =requests
+    STR R1, [R0]           ; Clear pending bit first
+
+    LDR R0, =requests      ; Check Floor 3 request
+    LDRB R1, [R0, #4]
+    CMP R1, #1
+    BEQ exti3_end          ; Early exit if already requested
+
     MOV R1, #1
     STRB R1, [R0, #4]
     LDR R0, =elevatorState
     LDRB R0, [R0]
     BL checkNextMove
+exti3_end
     POP {PC}
 
 EXTI9_5_IRQHandler
@@ -87,8 +112,13 @@ check_line7
     TST R1, #(1 << 7)
     BEQ check_line8
     MOV R2, #(1 << 7)
-    STR R2, [R0]
-    LDR R3, =requests
+    STR R2, [R0]           ; Clear pending bit
+
+    LDR R3, =requests      ; Check Floor 2 car button request
+    LDRB R4, [R3, #1]
+    CMP R4, #1
+    BEQ exti9_5_end        ; Early exit if already requested
+
     MOV R4, #1
     STRB R4, [R3, #1]
     LDR R0, =elevatorState
@@ -100,7 +130,13 @@ check_line8
     TST R1, #(1 << 8)
     BEQ check_line5
     MOV R2, #(1 << 8)
-    STR R2, [R0]
+    STR R2, [R0]           ; Clear pending bit
+
+    LDR R3, =currentFloor  ; PB8: Floor 1 sensor
+    LDRB R3, [R3]
+    CMP R3, #1
+    BEQ exti9_5_end        ; Early exit if we are already at Floor 1
+
     MOV R0, #1
     BL handle_sensor
     B exti9_5_end
@@ -109,7 +145,13 @@ check_line5
     TST R1, #(1 << 5)
     BEQ check_line6
     MOV R2, #(1 << 5)
-    STR R2, [R0]
+    STR R2, [R0]           ; Clear pending bit
+
+    LDR R3, =currentFloor  ; PB5: Floor 2 sensor
+    LDRB R3, [R3]
+    CMP R3, #2
+    BEQ exti9_5_end        ; Early exit if we are already at Floor 2
+
     MOV R0, #2
     BL handle_sensor
     B exti9_5_end
@@ -118,16 +160,25 @@ check_line6
     TST R1, #(1 << 6)
     BEQ exti9_5_end
     MOV R2, #(1 << 6)
-    STR R2, [R0]
+    STR R2, [R0]           ; Clear pending bit
+
+    LDR R3, =currentFloor  ; PA6: Floor 3 sensor
+    LDRB R3, [R3]
+    CMP R3, #3
+    BEQ exti9_5_end        ; Early exit if we are already at Floor 3
+
     MOV R0, #3
     BL handle_sensor
 
 exti9_5_end
     POP {PC}
 
+; =============================================================================
+; REMAINING FUNCTIONS (Unchanged)
+; =============================================================================
+
 handle_sensor
     PUSH {R4-R8, LR}
-
     ; save direction/state
     LDR R1, =elevatorState
     LDRB R4, [R1]
@@ -290,7 +341,6 @@ st_chk3
     STRB R2, [R1, #4]
 
 st_done
-    ; BL delay_2000ms
     POP {PC}
 
 checkNextMove
