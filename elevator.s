@@ -332,6 +332,10 @@ stopAndServe
     ; turn off motors through motor control module
     BL STOP
 
+    ; preserve the direction that triggered the stop before marking STOPPED
+    LDR R3, =pending_dir
+    LDRB R3, [R3]
+
     ; set stopped
     LDR R0, =elevatorState
     MOV R1, #STOPPED
@@ -351,7 +355,17 @@ st_chk2
     CMP R0, #2
     BNE st_chk3
     STRB R2, [R1, #1]
+    CMP R3, #MOVING_UP
+    BEQ st_chk2_up
+    CMP R3, #MOVING_DOWN
+    BEQ st_chk2_down
     STRB R2, [R1, #2]
+    STRB R2, [R1, #3]
+    B st_done
+st_chk2_up
+    STRB R2, [R1, #2]
+    B st_done
+st_chk2_down
     STRB R2, [R1, #3]
     B st_done
 st_chk3
