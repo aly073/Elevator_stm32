@@ -43,7 +43,7 @@
 ;     - SPI Pins: PA5 (CLK), PA7 (DIN), PA4 (CS)
 ;
 ;	- Audio:
-;	  - PA2
+;	  - PA2 (RX), PA3 (TX)
 ;
 ;	- Load Cell:
 ;	  - PB1: 
