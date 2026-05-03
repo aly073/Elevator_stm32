@@ -263,6 +263,13 @@ hs_pass
 hs_done
     POP {R4-R8, PC}
 
+; Check for all floors if should stop
+; Conditions to stop:
+; 	1. Floor reached
+; 	2. Floor was requested
+;	3. For floor 2: Moving up or moving down
+
+; Check floor 1
 shouldStop
     LDR R0, =currentFloor
     LDRB R0, [R0]
@@ -274,6 +281,8 @@ shouldStop
     CMP R2, #0
     BNE ss_true
     B ss_false
+
+; Check floor 3
 ss_chk3
     CMP R0, #3
     BNE ss_chk2
@@ -281,6 +290,8 @@ ss_chk3
     CMP R2, #0
     BNE ss_true
     B ss_false
+
+; Check floor 2 (up request)
 ss_chk2
     CMP R0, #2
     BNE ss_false
@@ -295,6 +306,8 @@ ss_chk2
     CMP R2, #0
     BNE ss_true
     B ss_false
+
+; Check floor 2 (down request)
 ss_chk2_down
     CMP R3, #MOVING_DOWN
     BNE ss_false
