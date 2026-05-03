@@ -134,11 +134,11 @@
             <RunIndependent>0</RunIndependent>
             <UpdateFlashBeforeDebugging>1</UpdateFlashBeforeDebugging>
             <Capability>1</Capability>
-            <DriverSelection>-1</DriverSelection>
+            <DriverSelection>4096</DriverSelection>
           </Flash1>
           <bUseTDR>1</bUseTDR>
           <Flash2>BIN\UL2CM3.DLL</Flash2>
-          <Flash3></Flash3>
+          <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
           <pFcarmOut></pFcarmOut>
           <pFcarmGrp></pFcarmGrp>
@@ -413,6 +413,11 @@
               <FileName>motor_control.s</FileName>
               <FileType>2</FileType>
               <FilePath>.\motor_control.s</FilePath>
+            </File>
+            <File>
+              <FileName>audio.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\audio.s</FilePath>
             </File>
           </Files>
         </Group>

@@ -228,6 +228,30 @@ config    FUNCTION
     ORR     R1, R1, #1
     STRH    R1, [R0, #0x00]
 
+    ; Audio UART initialization
+    ; Enable USART1 clock
+    LDR     R0, =RCC_APB2ENR
+    LDR     R1, [R0]
+    ORR     R1, R1, #(1 << 14)  ; USART1 enable
+    STR     R1, [R0]
+
+    ; Configure PA9 as TX (Alternate Function Push-Pull)
+    LDR     R0, =GPIOA_BASE + 0x04  ; GPIOA_CRH
+    LDR     R1, [R0]
+    BIC     R1, R1, #(0xF << 4)  ; Clear bits 4-7 for PA9
+    ORR     R1, R1, #(0xB << 4)  ; Set CNF=10, MODE=11
+    STR     R1, [R0]
+
+    ; USART1 Baud Rate (9600 @ 8MHz)
+    LDR     R0, =USART1_BASE + 0x08  ; USART1_BRR
+    LDR     R1, =0x0341
+    STR     R1, [R0]
+
+    ; Enable USART1
+    LDR     R0, =USART1_BASE + 0x0C  ; USART1_CR1
+    LDR     R1, =0x2008  ; UE=1, TE=1
+    STR     R1, [R0]
+
 	POP     {R0-R12, PC}
 	ENDFUNC
 
