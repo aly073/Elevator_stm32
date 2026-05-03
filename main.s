@@ -61,7 +61,7 @@ __main FUNCTION
 	BL		config
 
 main_loop
-    WFI
+    WFI			; Put CPU in low power state waiting for interrupt
     B main_loop
 	ENDFUNC
 
