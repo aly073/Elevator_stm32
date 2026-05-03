@@ -17,9 +17,8 @@ cmd_track_2    DCB 0x7E, 0xFF, 0x06, 0x03, 0x00, 0x00, 0x02, 0xFE, 0xF6, 0xEF
         EXPORT  PLAY_MOVEMENT_AUDIO
         EXPORT  PLAY_STOP_AUDIO
         EXPORT  uart_send
-        EXPORT  delay_ms
-        EXPORT  hardware_init
-        IMPORT  main_loop
+        EXPORT  hardware_init_audio
+		IMPORT delay_systick
 
 ; --- Audio Trigger Functions ---
 PLAY_MOVEMENT_AUDIO
@@ -37,7 +36,7 @@ PLAY_STOP_AUDIO
         POP     {R0, R1, PC}
 
 ; --- Hardware Initialization ---
-hardware_init
+hardware_init_audio
         PUSH    {LR}
         
         ; 1. Enable Clocks: GPIOA (Bit 2) and GPIOB (Bit 3) on APB2
@@ -73,13 +72,35 @@ hardware_init
         STR     R1, [R0]
 
         ; Startup Sequence
-        LDR     R0, =3000           ; 3s boot delay
-        BL      delay_ms
+        ; short settle delay before first command
+		MOV 	R0, #100
+		BL      delay_ms
+		
         LDR     R0, =cmd_set_volume
         MOV     R1, #10
         BL      uart_send
         
         POP     {PC}
+
+; --- Short millisecond delay for audio startup ---
+; R0 = delay count in rough milliseconds
+delay_ms
+        PUSH    {R1, R2, LR}
+        MOV     R2, R0
+
+delay_ms_outer
+        CMP     R2, #0
+        BEQ     delay_ms_done
+        LDR     R1, =6000
+
+delay_ms_inner
+        SUBS    R1, R1, #1
+        BNE     delay_ms_inner
+        SUBS    R2, R2, #1
+        B       delay_ms_outer
+
+delay_ms_done
+        POP     {R1, R2, PC}
 
 ; --- UART Send Helper ---
 uart_send
@@ -101,20 +122,5 @@ wait_txe
         B       tx_loop
 tx_done
         POP     {R4, R5, PC}
-
-; --- Delay Function ---
-delay_ms
-        PUSH    {R1, LR}
-delay_outer
-        CMP     R0, #0
-        BEQ     delay_exit
-        LDR     R1, =8000           
-delay_inner
-        SUBS    R1, R1, #1
-        BNE     delay_inner
-        SUBS    R0, R0, #1
-        B       delay_outer
-delay_exit
-        POP     {R1, PC}
-
+		
         END

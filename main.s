@@ -2,6 +2,7 @@
     IMPORT  EXTI0_IRQHandler
     IMPORT  EXTI1_IRQHandler
     IMPORT  EXTI2_IRQHandler
+    IMPORT  EXTI4_IRQHandler
     IMPORT  EXTI3_IRQHandler
     IMPORT  EXTI9_5_IRQHandler
 
@@ -18,7 +19,8 @@ __Vectors
     DCD     EXTI1_IRQHandler
     DCD     EXTI2_IRQHandler
     DCD     EXTI3_IRQHandler
-    SPACE   52
+    DCD     EXTI4_IRQHandler
+    SPACE   48
     DCD     EXTI9_5_IRQHandler
     SPACE   16
     DCD     TIM2_IRQHandler

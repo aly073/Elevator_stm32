@@ -5,6 +5,7 @@
     EXPORT  EXTI0_IRQHandler
     EXPORT  EXTI1_IRQHandler
     EXPORT  EXTI2_IRQHandler
+    EXPORT  EXTI4_IRQHandler
     EXPORT  EXTI3_IRQHandler
     EXPORT  EXTI9_5_IRQHandler
     EXPORT  stopAndServe
@@ -71,19 +72,26 @@ EXTI2_IRQHandler
     PUSH {LR}
     LDR R0, =EXTI_PR
     MOV R1, #(1 << 2)
+    STR R1, [R0]           ; Clear any stray EXTI2 pending bit
+    POP {PC}
+
+EXTI4_IRQHandler
+    PUSH {LR}
+    LDR R0, =EXTI_PR
+    MOV R1, #(1 << 4)
     STR R1, [R0]           ; Clear pending bit first
 
     LDR R0, =requests      ; Check Floor 2 DOWN request
     LDRB R1, [R0, #3]
     CMP R1, #1
-    BEQ exti2_end          ; Early exit if already requested
+    BEQ exti4_end          ; Early exit if already requested
 
     MOV R1, #1
     STRB R1, [R0, #3]
     LDR R0, =elevatorState
     LDRB R0, [R0]
     BL checkNextMove
-exti2_end
+exti4_end
     POP {PC}
 
 EXTI3_IRQHandler

@@ -12,6 +12,7 @@
     IMPORT  anim_active
     IMPORT  pending_stop
     IMPORT  pending_dir
+	IMPORT  hardware_init_audio
 
 
 ;============================================================
@@ -23,14 +24,14 @@
 ;   PIN CONNECTIONS:
 ;   - PC13: Onboard LED
 ;   - PB0: Elevator motor control (TIM3_CH3 PWM output)
-;   - PB10: Elevator up Direction control (GPIO output)
+;   - PB10: Elevator up Direction control (GPIO output) - SHOULD BE CHANGED
 ;   - PB11: Elevator down Direction control (GPIO output)
 ;
 ;   - Buttons (functional mapping used by IRQ code):
 ;     - PA0: Floor 1 request button (EXTI0)
 ;     - PA1: Floor 2 up button (EXTI1)
-;     - PB2: Floor 2 down button (EXTI2)	; UPDATE CODE TO MATCH
-;     - PB3: Floor 3 request button (EXTI3)	; UPDATE CODE TO MATCH
+;     - PB4: Floor 2 down button (EXTI4)
+;     - PB3: Floor 3 request button (EXTI3)
 ;     - PB7: Floor 2 cabin button (inside elevator) (EXTI7)
 ;
 ;   - Sensors (functional mapping used by IRQ code):
@@ -66,6 +67,13 @@ config    FUNCTION
     ORR     R1, R1, #(1 << 3)
     ORR     R1, R1, #(1 << 4)
     STR     R1, [R0]
+
+    ; Disable JTAG but keep SWD so PB3 can be used as EXTI3
+    LDR     R0, =AFIO_MAPR
+    LDR     R1, [R0]
+    BIC     R1, R1, #(0x7 << 24)
+    ORR     R1, R1, #(0x2 << 24)
+    STR     R1, [R0]
     
     LDR R0, =RCC_APB2ENR
     LDR R1, [R0]
@@ -86,12 +94,15 @@ config    FUNCTION
     ORR R1, R1, #(1 << 6)      ; <--- MODIFIED: Set PA6 bit in ODR to activate Pull-Up
     STR R1, [R0, #GPIOx_ODR]
 
+	; Disable JTAG but keep SWD (SWJ_CFG = 010)
+	
+	
     ; --- GPIOB CONFIGURATION ---
     LDR R0, =GPIOB_BASE
     LDR R1, [R0, #GPIOx_CRL]
-    LDR R2, =0xF0F00000
+    LDR R2, =0x000FF000
     BIC R1, R1, R2
-    LDR R2, =0x80800000
+    LDR R2, =0x00088000
     ORR R1, R1, R2
     STR R1, [R0, #GPIOx_CRL]
 
@@ -102,28 +113,56 @@ config    FUNCTION
     ORR R1, R1, R2
     STR R1, [R0, #GPIOx_CRH]
     
-    LDR R1, =0x0120            ; <--- MODIFIED: Set Bits 5 (0x20) and 8 (0x0100) for PB5 & PB8 Pull-Up
+    LDR R1, [R0, #GPIOx_ODR]
+    LDR R2, =0x00000138        ; PB3/PB4 pull-down, PB5/PB8 pull-up
+    BIC R1, R1, R2
+    LDR R2, =0x0120
+    ORR R1, R1, R2
     STR R1, [R0, #GPIOx_ODR]
 
     ; --- AFIO EXTI MAPPING ---
+    ; EXTICR1: Controls EXTI0, EXTI1, EXTI2, EXTI3
+    ; PA0 (0x0), PA1 (0x0), PA2 (0x0), PB3 (0x1) -> Target value: 0x1000
+    LDR R0, =AFIO_EXTICR1
+    LDR R1, =0x1000            ; EXTI3 mapped to PB3
+    STR R1, [R0]
+
+    ; EXTICR2: Controls EXTI4, EXTI5, EXTI6, EXTI7
+    ; PB4 (0x1), PB5 (0x1), PA6 (0x0), PB7 (0x1)
+    ; EXTI7: [15:12] = 1 (PB)
+    ; EXTI6: [11:8]  = 0 (PA)
+    ; EXTI5: [7:4]   = 1 (PB)
+    ; EXTI4: [3:0]   = 1 (PB)
+    ; Target hex: 1011
     LDR R0, =AFIO_EXTICR2
-    LDR R1, =0x1010
+    LDR R1, =0x1011            
     STR R1, [R0]
+
+    ; EXTICR3: Controls EXTI8, EXTI9, EXTI10, EXTI11
+    ; PB8 (0x1)
+    ; EXTI8: [3:0] = 1 (PB)
+    ; Target hex: 0001
     LDR R0, =AFIO_EXTICR3
-    LDR R1, =0x0001
+    LDR R1, =0x0001            
     STR R1, [R0]
+
 
     ; --- EXTI EDGE CONFIGURATION ---
     LDR R0, =EXTI_IMR
-    LDR R1, =0x01EF
+    LDR R1, =0x01FB
     STR R1, [R0]
     
     LDR R0, =EXTI_RTSR
-    LDR R1, =0x008F            ; <--- MODIFIED: Rising edge for remaining lines only (0,1,2,3,7)
+    LDR R1, =0x009B            ; Rising edge for lines 0,1,3,4,7
     STR R1, [R0]
     
     LDR R0, =EXTI_FTSR         ; <--- MODIFIED: Load Falling Trigger Selection Register
     LDR R1, =0x0160            ; <--- MODIFIED: Falling edge for lines 5, 6, 8
+    STR R1, [R0]
+
+    ; Clear stale pending EXTI flags before enabling NVIC
+    LDR R0, =EXTI_PR
+    LDR R1, =0x01FB
     STR R1, [R0]
 
     ; --- TIMER 2 CONFIGURATION ---
@@ -139,8 +178,10 @@ config    FUNCTION
 
     ; --- NVIC CONFIGURATION ---
     LDR R0, =NVIC_ISER0
-    LDR R1, =0x108003C0
+    LDR R1, =0x108006C0
     STR R1, [R0]
+	
+	BL hardware_init_audio
 	
 ;============================================================
 ; INITIAL STATE
@@ -245,30 +286,6 @@ config    FUNCTION
     LDRH    R1, [R0, #0x00]
     ORR     R1, R1, #1
     STRH    R1, [R0, #0x00]
-
-    ; Audio UART initialization
-    ; Enable USART1 clock
-    LDR     R0, =RCC_APB2ENR
-    LDR     R1, [R0]
-    ORR     R1, R1, #(1 << 14)  ; USART1 enable
-    STR     R1, [R0]
-
-    ; Configure PA9 as TX (Alternate Function Push-Pull)
-    LDR     R0, =GPIOA_BASE + 0x04  ; GPIOA_CRH
-    LDR     R1, [R0]
-    BIC     R1, R1, #(0xF << 4)  ; Clear bits 4-7 for PA9
-    ORR     R1, R1, #(0xB << 4)  ; Set CNF=10, MODE=11
-    STR     R1, [R0]
-
-    ; USART1 Baud Rate (9600 @ 8MHz)
-    LDR     R0, =USART1_BASE + 0x08  ; USART1_BRR
-    LDR     R1, =0x0341
-    STR     R1, [R0]
-
-    ; Enable USART1
-    LDR     R0, =USART1_BASE + 0x0C  ; USART1_CR1
-    LDR     R1, =0x2008  ; UE=1, TE=1
-    STR     R1, [R0]
 
 	POP     {R0-R12, PC}
 	ENDFUNC
