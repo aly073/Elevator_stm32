@@ -27,6 +27,8 @@
 ; ELEVATOR LOGIC & INTERRUPTS
 ; =============================================================================
 
+; Each interrupt line are shared across letters, (e.g. PA0, PB0 share same interrupt)
+
 EXTI0_IRQHandler
     PUSH {LR}
     LDR R0, =EXTI_PR
@@ -103,11 +105,13 @@ EXTI3_IRQHandler
 exti3_end
     POP {PC}
 
+; STM32 handles interrupt lines 5 to 9 in the same IRQ
 EXTI9_5_IRQHandler
     PUSH {LR}
     LDR R0, =EXTI_PR
     LDR R1, [R0]
 
+; Must check manually which bit is 1 to know which line from 5-9 triggered the interrupt
 check_line7
     TST R1, #(1 << 7)
     BEQ check_line8
@@ -234,6 +238,10 @@ hs_no_anim_stop_floor
     BL checkNextMove
     B hs_done
 
+; !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+; CHECK IF COMMENTS ARE RIGHT
+; R5 contains current number (last floor we were at before moving)
+; R6 contains currentFloor - 1 (floor sensor reading turned from 1-3 to 0-2)
 hs_pass
     CMP R5, R6
     BEQ hs_done
@@ -496,11 +504,11 @@ motor_off_only
     EXPORT  pending_dir
 
 elevatorState    SPACE   1
-currentFloor     SPACE   1
+currentFloor     SPACE   1 ; Floor reading from floor sensors
                  ALIGN   2
 requests         SPACE   5
 anim_step        SPACE   4
-current_num      SPACE   4
+current_num      SPACE   4 ; Number displayed on screen (1, 2, or 3)
 target_num       SPACE   4
 anim_active      SPACE   4
 pending_stop     SPACE   4

@@ -137,6 +137,7 @@ config    FUNCTION
     MOV R1, #1
     STRB R1, [R0]
     
+	; Initialize all request array items to 0
     LDR R0, =requests
     MOV R1, #0
     STRB R1, [R0, #0]
@@ -145,6 +146,7 @@ config    FUNCTION
     STRB R1, [R0, #3]
     STRB R1, [R0, #4]
 
+	; Initialize all varaibles to 0
     LDR R0, =current_num
     MOV R1, #0
     STR R1, [R0]
