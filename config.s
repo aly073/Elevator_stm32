@@ -24,7 +24,7 @@
 ;   PIN CONNECTIONS:
 ;   - PC13: Onboard LED
 ;   - PB0: Elevator motor control (TIM3_CH3 PWM output)
-;   - PB10: Elevator up Direction control (GPIO output) - SHOULD BE CHANGED
+;   - PB1: Elevator up Direction control (GPIO output)
 ;   - PB11: Elevator down Direction control (GPIO output)
 ;
 ;   - Buttons (functional mapping used by IRQ code):
@@ -102,8 +102,10 @@ config    FUNCTION
     LDR R1, [R0, #GPIOx_CRL]
     LDR R2, =0x000FF000
     BIC R1, R1, R2
+    BIC R1, R1, #0xF0
     LDR R2, =0x00088000
     ORR R1, R1, R2
+    ORR R1, R1, #0x30
     STR R1, [R0, #GPIOx_CRL]
 
     LDR R1, [R0, #GPIOx_CRH]
