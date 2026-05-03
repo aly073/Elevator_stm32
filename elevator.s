@@ -238,8 +238,6 @@ hs_no_anim_stop_floor
     BL checkNextMove
     B hs_done
 
-; !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-; CHECK IF COMMENTS ARE RIGHT
 ; R5 contains current number (last floor we were at before moving)
 ; R6 contains currentFloor - 1 (floor sensor reading turned from 1-3 to 0-2)
 hs_pass

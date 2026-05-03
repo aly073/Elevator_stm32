@@ -15,6 +15,11 @@
 
 
 ;============================================================
+;	Pins with UART capabilities: 
+;	  UART1: PA9 (TX), PA10 (RX)
+;	  UART2: PA2 (TX), PA3 (RX)
+;	  UART3: PB10 (TX), PB11 (RX)
+;
 ;   PIN CONNECTIONS:
 ;   - PC13: Onboard LED
 ;   - PB0: Elevator motor control (TIM3_CH3 PWM output)
@@ -24,9 +29,9 @@
 ;   - Buttons (functional mapping used by IRQ code):
 ;     - PA0: Floor 1 request button (EXTI0)
 ;     - PA1: Floor 2 up button (EXTI1)
-;     - PA2: Floor 2 down button (EXTI2)
-;     - PA3: Floor 3 request button (EXTI3)
-;     - PB7: Floor 2 car button (inside elevator) (EXTI7)
+;     - PB2: Floor 2 down button (EXTI2)	; UPDATE CODE TO MATCH
+;     - PB3: Floor 3 request button (EXTI3)	; UPDATE CODE TO MATCH
+;     - PB7: Floor 2 cabin button (inside elevator) (EXTI7)
 ;
 ;   - Sensors (functional mapping used by IRQ code):
 ;     - PB8: Floor 1 sensor (EXTI8)
@@ -35,6 +40,17 @@
 ;
 ;   - LED Matrix:
 ;     - SPI Pins: PA5 (CLK), PA7 (DIN), PA4 (CS)
+;
+;	- Audio:
+;	  - PA2
+;
+;	- Load Cell:
+;	  - PB1: 
+;	  - PB2: 
+;
+;	- Bluetooth:
+;	  - PA9: TX
+;	  - PA10: RX
 ;============================================================
 
 ;============================================================
