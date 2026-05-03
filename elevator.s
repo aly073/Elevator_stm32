@@ -351,15 +351,7 @@ st_chk2
     CMP R0, #2
     BNE st_chk3
     STRB R2, [R1, #1]
-    LDR R3, =elevatorState
-    LDRB R3, [R3]
-    CMP R3, #MOVING_UP
-    BNE st_chk_down
     STRB R2, [R1, #2]
-    B st_done
-st_chk_down
-    CMP R3, #MOVING_DOWN
-    BNE st_done
     STRB R2, [R1, #3]
     B st_done
 st_chk3
@@ -391,10 +383,11 @@ cnm_moving_up
     CMP R2, #0
     BEQ cmu_req_mid
     CMP R7, #3
-    BNE set_up
+    BLT set_up
     MOV R2, #0
     STRB R2, [R1, #4]
     B cnm_update_motors
+
 cmu_req_mid
     LDRB R2, [R1, #1]
     LDRB R3, [R1, #2]
@@ -411,12 +404,13 @@ cmu_req_mid
     STRB R2, [R1, #2]
     STRB R2, [R1, #3]
     B cnm_update_motors
+
 cmu_req_down
     LDRB R2, [R1, #0]
     CMP R2, #0
     BEQ cnm_update_motors
     CMP R7, #1
-    BNE set_down
+    BGT set_down
     MOV R2, #0
     STRB R2, [R1, #0]
     B cnm_update_motors
