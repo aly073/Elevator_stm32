@@ -37,21 +37,31 @@
 ;   - Sensors (functional mapping used by IRQ code):
 ;     - PB8: Floor 1 sensor (EXTI8)
 ;     - PB5: Floor 2 sensor (EXTI5)
-;     - PA6: Floor 3 sensor (EXTI6)
+;     - PB6: Floor 3 sensor (EXTI6) -- SHOULD BE CHANGED
 ;
 ;   - LED Matrix:
 ;     - SPI Pins: PA5 (CLK), PA7 (DIN), PA4 (CS)
+
+    - RFID:
+      - SPI Pins: PA5 (CLK), PA7 (DIN), PA6 (MISO), PB12 (CS)
 ;
 ;	- Audio:
-;	  - PA2 (RX), PA3 (TX)
+;	  - PA2 (RX)
+      - PA3 (TX)
 ;
 ;	- Load Cell:
-;	  - PB1: 
-;	  - PB2: 
+;	  - PB14: DT
+;	  - PB15: SCK
+
 ;
 ;	- Bluetooth:
 ;	  - PA9: TX
 ;	  - PA10: RX
+
+    - REMAINING PINS:
+        PA8, PA11, PA12, PA15
+        PB2, PB9, PB10, PB13
+
 ;============================================================
 
 ;============================================================
