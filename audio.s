@@ -11,11 +11,14 @@ cmd_set_volume DCB 0x7E, 0xFF, 0x06, 0x06, 0x00, 0x00, 0x1E, 0xFE, 0xD7, 0xEF
 cmd_track_1    DCB 0x7E, 0xFF, 0x06, 0x03, 0x00, 0x00, 0x01, 0xFE, 0xF7, 0xEF
 ; Track 2 (0002.mp3) - For STOP
 cmd_track_2    DCB 0x7E, 0xFF, 0x06, 0x03, 0x00, 0x00, 0x02, 0xFE, 0xF6, 0xEF
+; Track 3 (0003.mp3) - For WARNING
+cmd_track_3    DCB 0x7E, 0xFF, 0x06, 0x03, 0x00, 0x00, 0x03, 0xFE, 0xF5, 0xEF
 
         AREA    |.text|, CODE, READONLY
         ALIGN
         EXPORT  PLAY_MOVEMENT_AUDIO
         EXPORT  PLAY_STOP_AUDIO
+        EXPORT  PLAY_WARNING_AUDIO
         EXPORT  uart_send
         EXPORT  hardware_init_audio
 		IMPORT delay_systick
@@ -31,6 +34,13 @@ PLAY_MOVEMENT_AUDIO
 PLAY_STOP_AUDIO
         PUSH    {R0, R1, LR}
         LDR     R0, =cmd_track_2
+        MOV     R1, #10
+        BL      uart_send
+        POP     {R0, R1, PC}
+
+PLAY_WARNING_AUDIO
+        PUSH    {R0, R1, LR}
+        LDR     R0, =cmd_track_3
         MOV     R1, #10
         BL      uart_send
         POP     {R0, R1, PC}
