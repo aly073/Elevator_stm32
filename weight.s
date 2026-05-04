@@ -1,29 +1,24 @@
 ; --- Register Definitions (EQU) ---
     GET     registers.inc
-		
-	EXPORT check_weight
+        
+    EXPORT check_weight
+    EXPORT weight_sensor_init
+    IMPORT PLAY_WARNING_AUDIO
+    IMPORT delay_systick
 
 ; Max weight allowed
 THRESHOLD   EQU    50
 
-    ; 1. Define the Vector Table Area
-    AREA    RESET, DATA, READONLY
-    EXPORT  __Vectors
-    EXPORT  Reset_Handler    ; Must match your error's capitalization
-
-__Vectors
-    DCD     0x20005000     ; Stack Pointer
-    DCD     Reset_Handler  ; Reset Vector (Starting point)
-
-    ; 2. Define the Code Area
+    ;Define the Code Area
     AREA    |.text|, CODE, READONLY
-    ENTRY                  ; Mark this as the start of execution
 
-Reset_Handler
-    ; Enable Clocks for Port A and C
-    LDR     R0, =RCC_APB2ENR
+; initialize pins needed for weight sensor
+weight_sensor_init
+    PUSH {R1, LR}            ; Corrected: Push LR, not PC
+
+	LDR     R0, =RCC_APB2ENR
     LDR     R1, [R0]
-    ORR     R1, R1, #0x14
+    ORR     R1, R1, #0x18       ; CHANGED: Bit 3 (IOPB) and Bit 4 (IOPC)
     STR     R1, [R0]
 
     ; Configure PC13 as Output (LED)
@@ -33,36 +28,46 @@ Reset_Handler
     ORR     R1, R1, #(0x2 << 20)
     STR     R1, [R0]
 
-    ; Configure PA0 (SCK, Out) and PA1 (DT, In)
-    LDR     R0, =GPIOA_CRL
+    ; Configure PB14 (DT, In) and PB15 (SCK, Out)
+    LDR     R0, =GPIOB_CRH      ; CHANGED: Pins 14/15 are in CRH
     LDR     R1, [R0]
-    BIC     R1, R1, #0xFF
-    ORR     R1, R1, #0x42
+    ; Clear bits 24-31 (PB14 and PB15)
+    BIC     R1, R1, #(0xFF << 24)
+    ; PB14: Input Floating (0x4), PB15: Output 2MHz (0x2) -> 0x24
+    ORR     R1, R1, #(0x24 << 24)
     STR     R1, [R0]
 
-main_loop
-    ; Wait for HX711 (ADC) to be ready to send data
-    LDR     R4, =GPIOA_IDR
+    POP {R1, PC}             ; Corrected: Pop into PC to return
+
+; checks weight. acts like while (weight > Threshold) { play warning sound } return
+check_weight
+	PUSH {R1, LR}
+
+    ; Wait for HX711 Ready (PB14 goes LOW)
+    LDR     R4, =GPIOB_IDR
 wait_ready
     LDR     R5, [R4]
-    TST     R5, #0x02
+    TST     R5, #(1 << 14)      ; CHANGED: Check bit 14
     BNE     wait_ready
 
     ; Read 24 Bits
     MOV     R6, #24
     MOV     R7, #0
 read_loop
-    LDR     R0, =GPIOA_BSRR
-    MOV     R1, #1
-    STR     R1, [R0]        ; SCK HIGH
+    LDR     R0, =GPIOB_BSRR
+    MOV     R1, #(1 << 15)      ; CHANGED: PB15 (SCK) HIGH
+    STR     R1, [R0]        
     NOP
     NOP
-    MOV     R1, #(1 << 16)
-    STR     R1, [R0]        ; SCK LOW
+    MOV     R1, #(1 << 31)      ; CHANGED: PB15 (SCK) LOW (15 + 16 = 31)
+    STR     R1, [R0]        
     
     LDR     R5, [R4]
-    AND     R5, R5, #0x02
-    LSR     R5, R5, #1
+    TST     R5, #(1 << 14)      ; CHANGED: Check PB14
+    ITE     NE                  ; Conditional instruction for compact bit handling
+    MOVNE   R5, #1
+    MOVEQ   R5, #0
+    
     LSL     R7, R7, #1
     ORR     R7, R7, R5
     
@@ -70,11 +75,11 @@ read_loop
     BNE     read_loop
 
     ; 25th pulse
-    LDR     R0, =GPIOA_BSRR
-    MOV     R1, #1
+    LDR     R0, =GPIOB_BSRR
+    MOV     R1, #(1 << 15)      ; CHANGED: PB15 HIGH
     STR     R1, [R0]
     NOP
-    MOV     R1, #(1 << 16)
+    MOV     R1, #(1 << 31)      ; CHANGED: PB15 LOW
     STR     R1, [R0]
 
     ; Sign Extension
@@ -85,19 +90,28 @@ read_loop
     LDR     R2, =THRESHOLD
     CMP     R7, R2
     LDR     R3, =GPIOC_BSRR
-    BGT     led_on
+    BGT     weight_over
 
-led_off
-    MOV     R1, #(1 << 13)  ; LED Off
+weight_under
+    MOV     R1, #(1 << 13)      ; LED Off (PC13 High)
     STR     R1, [R3]
-    B       main_loop
+    POP 	{R1, PC}
 
-led_on
-    MOV     R1, #(1 << 29)  ; LED On
+weight_over
+    MOV     R1, #(1 << 29)      ; LED On (PC13 Low)
     STR     R1, [R3]
-    B       main_loop
-	
-check_weight
-	
+	BL		PLAY_WARNING_AUDIO
+	BL 		delay_audio
+    B       wait_ready
+
+; small delay for audio
+delay_audio
+    PUSH    {R2, LR}
+    LDR     R2, =2800000       ; Loop counter for ~2 second delay
+delay_audio_loop
+    SUBS    R2, R2, #1
+    BNE     delay_audio_loop
+    POP     {R2, PC}
+
     ALIGN
     END

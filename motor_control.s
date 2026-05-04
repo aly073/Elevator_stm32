@@ -5,6 +5,7 @@
     EXPORT  GO_UP
     IMPORT  PLAY_MOVEMENT_AUDIO
     IMPORT  PLAY_STOP_AUDIO
+    IMPORT  check_weight
 
 ; Mask for PB1 and PB11 (Bits 1 and 11) = 0x0802
 DIR_MASK EQU 0x0802 
@@ -63,6 +64,9 @@ GO_UP FUNCTION
         AND     R1, R2, R3
         CMP     R1, #0x0002
         BEQ     DONE_UP             ; Early exit if already going UP
+
+        ; Check weight < Threshold
+        BL check_weight
         
         BIC     R2, R2, R3          ; Clear PB1/PB11
         ORR     R2, R2,	#(1 << 1)		    ; Set UP state

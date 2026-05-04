@@ -13,6 +13,7 @@
     IMPORT  pending_stop
     IMPORT  pending_dir
 	IMPORT  hardware_init_audio
+    IMPORT weight_sensor_init
 
 
 ;============================================================
@@ -42,12 +43,12 @@
 ;   - LED Matrix:
 ;     - SPI Pins: PA5 (CLK), PA7 (DIN), PA4 (CS)
 
-    - RFID:
-      - SPI Pins: PA5 (CLK), PA7 (DIN), PA6 (MISO), PB12 (CS)
+;    - RFID:
+;      - SPI Pins: PA5 (CLK), PA7 (DIN), PA6 (MISO), PB12 (CS)
 ;
 ;	- Audio:
 ;	  - PA2 (RX)
-      - PA3 (TX)
+;      - PA3 (TX)
 ;
 ;	- Load Cell:
 ;	  - PB14: DT
@@ -58,9 +59,9 @@
 ;	  - PA9: TX
 ;	  - PA10: RX
 
-    - REMAINING PINS:
-        PA8, PA11, PA12, PA15
-        PB2, PB9, PB10, PB13
+;    - REMAINING PINS:
+;        PA8, PA11, PA12, PA15
+;        PB2, PB9, PB10, PB13
 
 ;============================================================
 
@@ -194,6 +195,7 @@ config    FUNCTION
     STR R1, [R0]
 	
 	BL hardware_init_audio
+    BL weight_sensor_init
 	
 ;============================================================
 ; INITIAL STATE
