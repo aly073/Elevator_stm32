@@ -20,6 +20,9 @@ GO_DOWN FUNCTION
         AND     R1, R2, R3
         CMP     R1, #0x0800
         BEQ     DONE_DOWN           ; Early exit if already going DOWN
+
+        ; Check weight < Threshold
+        BL check_weight
         
         ; Apply new state while preserving other bits
         BIC     R2, R2, R3          ; Clear PB1/PB11
