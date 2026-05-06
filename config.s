@@ -195,7 +195,7 @@ config    FUNCTION
     STR R1, [R0]
 	
 	BL hardware_init_audio
-    BL weight_sensor_init
+    ; BL weight_sensor_init
 	
 ;============================================================
 ; INITIAL STATE

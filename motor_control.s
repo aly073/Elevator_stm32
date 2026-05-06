@@ -22,7 +22,7 @@ GO_DOWN FUNCTION
         BEQ     DONE_DOWN           ; Early exit if already going DOWN
 
         ; Check weight < Threshold
-        BL check_weight
+        ; BL check_weight
         
         ; Apply new state while preserving other bits
         BIC     R2, R2, R3          ; Clear PB1/PB11
@@ -69,7 +69,7 @@ GO_UP FUNCTION
         BEQ     DONE_UP             ; Early exit if already going UP
 
         ; Check weight < Threshold
-        BL check_weight
+        ; BL check_weight
         
         BIC     R2, R2, R3          ; Clear PB1/PB11
         ORR     R2, R2,	#(1 << 1)		    ; Set UP state
