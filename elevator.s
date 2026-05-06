@@ -174,7 +174,7 @@ check_line6
     MOV R2, #(1 << 6)
     STR R2, [R0]           ; Clear pending bit
 
-    LDR R3, =currentFloor  ; PA6: Floor 3 sensor
+    LDR R3, =currentFloor  ; PB6: Floor 3 sensor
     LDRB R3, [R3]
     CMP R3, #3
     BEQ exti9_5_end        ; Early exit if we are already at Floor 3

@@ -128,9 +128,9 @@ config    FUNCTION
     STR R1, [R0, #GPIOx_CRH]
     
     LDR R1, [R0, #GPIOx_ODR]
-    LDR R2, =0x00000138        ; PB3/PB4 pull-down, PB5/PB8 pull-up
+    LDR R2, =0x00000138        ; PB3/PB4 pull-down, PB5/PB6/PB8 pull-up
     BIC R1, R1, R2
-    LDR R2, =0x0120
+    LDR R2, =0x0160
     ORR R1, R1, R2
     STR R1, [R0, #GPIOx_ODR]
 
@@ -142,14 +142,14 @@ config    FUNCTION
     STR R1, [R0]
 
     ; EXTICR2: Controls EXTI4, EXTI5, EXTI6, EXTI7
-    ; PB4 (0x1), PB5 (0x1), PA6 (0x0), PB7 (0x1)
+    ; PB4 (0x1), PB5 (0x1), PB6 (0x1), PB7 (0x1)
     ; EXTI7: [15:12] = 1 (PB)
-    ; EXTI6: [11:8]  = 0 (PA)
+    ; EXTI6: [11:8]  = 1 (PB)
     ; EXTI5: [7:4]   = 1 (PB)
     ; EXTI4: [3:0]   = 1 (PB)
-    ; Target hex: 1011
+    ; Target hex: 1111
     LDR R0, =AFIO_EXTICR2
-    LDR R1, =0x1011            
+    LDR R1, =0x1111            
     STR R1, [R0]
 
     ; EXTICR3: Controls EXTI8, EXTI9, EXTI10, EXTI11
