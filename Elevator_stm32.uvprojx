@@ -424,6 +424,11 @@
               <FileType>2</FileType>
               <FilePath>.\weight.s</FilePath>
             </File>
+            <File>
+              <FileName>bluetooth.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\bluetooth.s</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

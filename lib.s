@@ -2,7 +2,7 @@
 ; Basic functions
 ;============================================================
     AREA	defs, CODE, READONLY
-	GET     registers.inc
+	GET    registers.inc
     EXPORT delay_systick
     EXPORT delay
     EXPORT set_servo_angle

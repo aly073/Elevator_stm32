@@ -187,6 +187,7 @@ EXTI_PR                 EQU (EXTI_BASE + 0x14)
 
 NVIC_ISER0              EQU (NVIC_BASE + 0x100)
 NVIC_ISER1              EQU (NVIC_BASE + 0x104)
+NVIC_ISPR0      	EQU 0xE000E200
 
 STK_CTRL                EQU (STK_BASE + 0x00)
 STK_LOAD                EQU (STK_BASE + 0x04)

@@ -13,7 +13,8 @@
     IMPORT  pending_stop
     IMPORT  pending_dir
 	IMPORT  hardware_init_audio
-    IMPORT weight_sensor_init
+    IMPORT  weight_sensor_init
+    IMPORT  bluetooth_init
 
 
 ;============================================================
@@ -195,6 +196,7 @@ config    FUNCTION
     STR R1, [R0]
 	
 	BL hardware_init_audio
+    BL bluetooth_init
     ; BL weight_sensor_init
 	
 ;============================================================
