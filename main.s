@@ -51,6 +51,8 @@ __Vectors_Size  EQU __Vectors_End - __Vectors
     IMPORT  GO_DOWN
     IMPORT  STOP
     IMPORT  GO_UP
+    IMPORT  main_loop
+	IMPORT 	rfid_init
 
 ;============================================================
 ; Main function
@@ -62,11 +64,9 @@ Reset_Handler FUNCTION
     ENDFUNC
 
 __main FUNCTION
-	BL		config
 
-main_loop
-    WFI			; Put CPU in low power state waiting for interrupt
-    B main_loop
+	BL		config
+    B       main_loop
 	ENDFUNC
 
     END

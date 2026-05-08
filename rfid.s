@@ -1,4 +1,4 @@
-THUMB
+	THUMB
     PRESERVE8
 
 ; ==========================================
@@ -52,23 +52,12 @@ TxASKReg        EQU 0x15
 TModeReg        EQU 0x2A
 TPrescalerReg   EQU 0x2B
 TReloadRegH     EQU 0x2C
-TReloadRegL     EQU 0x2D
-
-; ==========================================
-; VECTOR TABLE
-; ==========================================
-    AREA |.vectors|, CODE, READONLY, ALIGN=2
-    EXPORT __Vectors
-__Vectors
-    DCD 0x20005000                  
-    DCD Reset_Handler + 1           
-    SPACE 148                         
-    DCD EXTI9_5_IRQHandler + 1        
+TReloadRegL     EQU 0x2D      
 
 ; ==========================================
 ; RAM VARIABLES
 ; ==========================================
-    AREA |.bss|, DATA, READWRITE, ZERO_INIT, ALIGN=2
+    AREA |.bss|, DATA, READWRITE, ALIGN=2
 irq_flag    SPACE 4             
 uid_buffer  SPACE 5             
 
@@ -77,9 +66,11 @@ uid_buffer  SPACE 5
 ; ==========================================
     AREA |.text|, CODE, READONLY, ALIGN=2
 
-    EXPORT Reset_Handler
-Reset_Handler PROC
+
+	EXPORT rfid_init
+rfid_init PROC
     ; Initialize R10 to 0
+    PUSH {R0-R12,LR}
     mov r10, #0
 
     ; 1. Enable Clocks
@@ -89,22 +80,35 @@ Reset_Handler PROC
     orr r1, r1, r2
     str r1, [r0]
 
-    ; 2. Configure GPIOA (SPI1 + RST)
+    ; 2. Configure GPIOA (SPI1 Pins: PA7, PA6, PA5, PA4 + RST: PA8)
+    ; PA7=B, PA6=4, PA5=B, PA4=4 (NSS must be defined for SPI to work)
     ldr r0, =GPIOA_CRL
-    ldr r1, =0xB4B44444         
+    ldr r1, [r0]
+    ldr r2, =0x0000FFFF         ; Keep PA0-PA3, Clear PA4-PA7
+    and r1, r1, r2              
+    ldr r2, =0xB4B40000         ; Set PA7=B, PA6=4, PA5=B, PA4=4
+    orr r1, r1, r2
     str r1, [r0]
+
+    ; Configure PA8 (RST) = 3
     ldr r0, =GPIOA_CRH
-    ldr r1, =0x44444443         
+    ldr r1, [r0]
+    ldr r2, =0xFFFFFFF0         ; Keep PA9-PA15, Clear PA8
+    and r1, r1, r2              
+    orr r1, r1, #0x00000003     ; Set PA8=3
     str r1, [r0]
 
-    ; 3. Configure GPIOB (LEDs + CS + IRQ)
-    ldr r0, =GPIOB_CRL
-    ldr r1, =0x44444433         
-    str r1, [r0]
+    ; 3. Configure GPIOB (CS: PB12 + IRQ: PB9)
+    ; LED configs (GPIOB_CRL) removed entirely.
     ldr r0, =GPIOB_CRH
-    ldr r1, =0x44434444         ; PB12=Out, PB9=In Float
+    ldr r1, [r0]
+    ldr r2, =0xFFF0FF0F         ; Keep PB15-13, PB11-10, PB8. Clear PB12 and PB9.
+    and r1, r1, r2              
+    ldr r2, =0x00030040         ; Set PB12=3 (Output), PB9=4 (Input Float)
+    orr r1, r1, r2
     str r1, [r0]
 
+    ; Set initial states for RST (PA8) and CS (PB12)
     ldr r0, =GPIOA_BSRR
     ldr r1, =(1<<8)
     str r1, [r0]
@@ -113,12 +117,12 @@ Reset_Handler PROC
     str r1, [r0]
     bl delay_long               
 
-    ; 4. Setup EXTI9
+    ; 4. Setup EXTI9 (Port B, Pin 9)
     ldr r0, =AFIO_EXTICR3
     ldr r1, [r0]
-    ldr r2, =0xFFFFFF0F         
+    ldr r2, =0xFFFFFF0F         ; Clear EXTI9 bits (7:4)
     and r1, r1, r2
-    orr r1, r1, #(0x1 << 4)     
+    orr r1, r1, #(0x1 << 4)     ; Set EXTI9 to Port B
     str r1, [r0]
 
     ldr r0, =EXTI_FTSR
@@ -153,7 +157,7 @@ Reset_Handler PROC
     bl rc522_write
     bl delay_long               
 
-    ; FIX: FAST RECOVERY TIMER (30 instead of 1.5s)
+    ; FAST RECOVERY TIMER
     mov r0, #TModeReg
     mov r1, #0x8D               
     bl rc522_write
@@ -183,9 +187,17 @@ Reset_Handler PROC
     mov r0, #DivIEnReg
     mov r1, #0x80               
     bl rc522_write
-    bl delay_short              
+    bl delay_short      
+    POP {R0-R12,LR}
+    ENDP
+		
+;===================================
+;       MAIN LOOP
+;===================================
 
-main_loop
+	
+	EXPORT main_loop
+main_loop	PROC
     ; Turn off LEDs and reset elevator flag
     ldr r0, =GPIOB_BRR
     ldr r1, =0x03
@@ -281,8 +293,9 @@ anti_poll
     mov r0, #FIFOLevelReg
     bl rc522_read
     cmp r0, #5
-    bne main_loop 
-
+	beq continue
+    b main_loop 
+continue
     ldr r4, =uid_buffer
     mov r5, #5
 read_uid_loop
@@ -306,16 +319,10 @@ compare_loop
 
 correct_card
     mov r10, #1                 ; SET R10 FOR ELEVATOR LOGIC
-    ldr r0, =GPIOB_BSRR
-    ldr r1, =0x01               
-    str r1, [r0]
     bl delay_long
     b main_loop
 
 wrong_card
-    ldr r0, =GPIOB_BSRR
-    ldr r1, =0x02               
-    str r1, [r0]
     bl delay_long
     b main_loop
     ENDP
@@ -323,9 +330,9 @@ wrong_card
 ; ==========================================
 ; ISR & SUBROUTINES
 ; ==========================================
-    EXPORT EXTI9_5_IRQHandler
-EXTI9_5_IRQHandler PROC
-    push {lr}
+    EXPORT rfid_isr
+rfid_isr PROC
+    push {r0,r1,r2,lr}
     ldr r0, =EXTI_PR
     ldr r1, =(1<<9)
     str r1, [r0]
@@ -334,7 +341,7 @@ EXTI9_5_IRQHandler PROC
     str r1, [r0]
     dsb
     isb
-    pop {pc}
+    pop {r0,r1,r2,pc}
     ENDP
 
 clear_irqs PROC

@@ -15,6 +15,7 @@
 	IMPORT  hardware_init_audio
     IMPORT  weight_sensor_init
     IMPORT  bluetooth_init
+    IMPORT  rfid_init
 
 
 ;============================================================
@@ -45,7 +46,7 @@
 ;     - SPI Pins: PA5 (CLK), PA7 (DIN), PA4 (CS)
 
 ;    - RFID:
-;      - SPI Pins: PA5 (CLK), PA7 (DIN), PA6 (MISO), PB12 (CS)
+;      - SPI Pins: PA5 (CLK), PA7 (DIN), PA6 (MISO), PB12 (CS), PA8 (RST)
 ;
 ;	- Audio:
 ;	  - PA2 (RX)
@@ -72,6 +73,9 @@
 
 config    FUNCTION
     PUSH    {R0-R12, LR}
+	
+	BL 		rfid_init 	; Keep this first because it doesnt modify safely (breaks if you try to change)
+	
     ; Enable clocks for AFIO, GPIOB, GPIOC
     LDR     R0, =RCC_APB2ENR
     LDR     R1, [R0]
@@ -157,7 +161,7 @@ config    FUNCTION
     ; EXTI8: [3:0] = 1 (PB)
     ; Target hex: 0001
     LDR R0, =AFIO_EXTICR3
-    LDR R1, =0x0001            
+    LDR R1, =0x0011            
     STR R1, [R0]
 
 
@@ -189,7 +193,7 @@ config    FUNCTION
     STR R1, [R0, #0x0C]
     MOV R1, #0
     STR R1, [R0, #0x00]
-
+	
     ; --- NVIC CONFIGURATION ---
     LDR R0, =NVIC_ISER0
     LDR R1, =0x108006C0

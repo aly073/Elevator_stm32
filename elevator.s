@@ -23,6 +23,7 @@
     IMPORT  GO_DOWN
     IMPORT  STOP
     IMPORT  GO_UP
+    IMPORT  rfid_isr
 
 ; =============================================================================
 ; ELEVATOR LOGIC & INTERRUPTS
@@ -120,6 +121,12 @@ EXTI9_5_IRQHandler
     LDR R1, [R0]
 
 ; Must check manually which bit is 1 to know which line from 5-9 triggered the interrupt
+check_line9
+    TST R1, #(1<<9)
+    BEQ check_line7
+    BL rfid_isr
+    B exti9_5_end
+
 check_line7
     TST R1, #(1 << 7)
     BEQ check_line8

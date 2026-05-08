@@ -400,11 +400,6 @@
               <FilePath>.\config.s</FilePath>
             </File>
             <File>
-              <FileName>elevator.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>.\elevator.s</FilePath>
-            </File>
-            <File>
               <FileName>animation.s</FileName>
               <FileType>2</FileType>
               <FilePath>.\animation.s</FilePath>
@@ -428,6 +423,16 @@
               <FileName>bluetooth.s</FileName>
               <FileType>2</FileType>
               <FilePath>.\bluetooth.s</FilePath>
+            </File>
+            <File>
+              <FileName>rfid.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\rfid.s</FilePath>
+            </File>
+            <File>
+              <FileName>elevator.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\elevator.s</FilePath>
             </File>
           </Files>
         </Group>
