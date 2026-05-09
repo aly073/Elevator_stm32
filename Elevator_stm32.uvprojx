@@ -430,6 +430,11 @@
               <FilePath>.\bluetooth.s</FilePath>
             </File>
             <File>
+              <FileName>rfid.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\rfid.s</FilePath>
+            </File>
+            <File>
               <FileName>doors.s</FileName>
               <FileType>2</FileType>
               <FilePath>.\doors.s</FilePath>

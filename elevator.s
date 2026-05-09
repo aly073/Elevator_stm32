@@ -24,6 +24,7 @@
     IMPORT  GO_DOWN
     IMPORT  STOP
     IMPORT  GO_UP
+    IMPORT  rfid_isr
 
 ; =============================================================================
 ; ELEVATOR LOGIC & INTERRUPTS
@@ -159,6 +160,12 @@ EXTI15_10_IRQHandler
     LDR R0, =EXTI_PR
     LDR R1, [R0]
 
+    TST R1, #(1<<11)
+    BEQ check_line15
+    BL  rfid_isr
+    B   exti15_10_end
+
+check_line15
     TST R1, #(1 << 15)
     BEQ check_line12
     MOV R2, #(1 << 15)

@@ -16,6 +16,7 @@
     IMPORT  weight_sensor_init
     IMPORT  bluetooth_init
     IMPORT  doors_init
+	IMPORT 	rfid_init
 
 
 ;============================================================
@@ -169,10 +170,11 @@ config    FUNCTION
 
     ; EXTICR3: Controls EXTI8, EXTI9, EXTI10, EXTI11
     ; PA8 (0x0)
+    ; PB11 (0X1)
     ; EXTI8: [3:0] = 0 (PA)
-    ; Target hex: 0000
+    ; Target hex: 1000
     LDR R0, =AFIO_EXTICR3
-    LDR R1, =0x0000
+    LDR R1, =0x1000
     STR R1, [R0]
 
     ; EXTICR4: Controls EXTI12, EXTI13, EXTI14, EXTI15
@@ -224,7 +226,7 @@ config    FUNCTION
 	
 	BL hardware_init_audio
     BL bluetooth_init
-    BL doors_init
+    ;BL doors_init
     ; BL weight_sensor_init
 	
 ;============================================================
@@ -262,8 +264,10 @@ config    FUNCTION
     LDR R0, =pending_dir
     STR R1, [R0]
 
-    BL matrix_init
-    BL draw_initial_state
+    ;BL matrix_init
+    ;BL draw_initial_state
+	BL rfid_init
+
 
 
 ;============================================================
