@@ -34,10 +34,10 @@
 ;     - PA1: Floor 2 up button (EXTI1)
 ;     - PB4: Floor 2 down button (EXTI4)
 ;     - PB3: Floor 3 request button (EXTI3)
-;     - PB7: Floor 2 cabin button (inside elevator) (EXTI7) --TO MOVE to pa12
+;     - PA12: Floor 2 cabin button (inside elevator) (EXTI12)
 ;
 ;   - Sensors (functional mapping used by IRQ code):
-;     - PB8: Floor 1 sensor (EXTI8) --TO MOVE to pa15
+;     - PA15: Floor 1 sensor (EXTI15)
 ;     - PB5: Floor 2 sensor (EXTI5)
 ;     - PB6: Floor 3 sensor (EXTI6)
 ;
@@ -108,8 +108,16 @@ config    FUNCTION
     LDR R0, =GPIOA_BASE
     LDR R1, =0xB8B38888
     STR R1, [R0, #GPIOx_CRL]
+    LDR R1, [R0, #GPIOx_CRH]
+    LDR R2, =0xF00F0000
+    BIC R1, R15, R2
+    LDR R2, =0x80080000
+    ORR R1, R1, R2
+    STR R1, [R0, #GPIOx_CRH]
     MOV R1, #CS_PIN
     ORR R1, R1, #(1 << 6)      ; <--- MODIFIED: Set PA6 bit in ODR to activate Pull-Up
+    ORR R1, R1, #(1 << 12)
+    ORR R1, R1, #(1 << 15)
     STR R1, [R0, #GPIOx_ODR]
 
 	; Disable JTAG but keep SWD (SWJ_CFG = 010)
@@ -134,9 +142,9 @@ config    FUNCTION
     STR R1, [R0, #GPIOx_CRH]
     
     LDR R1, [R0, #GPIOx_ODR]
-    LDR R2, =0x00000138        ; PB3/PB4 pull-down, PB5/PB6/PB8 pull-up
+    LDR R2, =0x00000178        ; PB3/PB4 pull-down, PB5/PB6 pull-up
     BIC R1, R1, R2
-    LDR R2, =0x0160
+    LDR R2, =0x0060
     ORR R1, R1, R2
     STR R1, [R0, #GPIOx_ODR]
 
@@ -148,41 +156,50 @@ config    FUNCTION
     STR R1, [R0]
 
     ; EXTICR2: Controls EXTI4, EXTI5, EXTI6, EXTI7
-    ; PB4 (0x1), PB5 (0x1), PB6 (0x1), PB7 (0x1)
-    ; EXTI7: [15:12] = 1 (PB)
+    ; PB4 (0x1), PB5 (0x1), PB6 (0x1), PA (0x0)
+    ; EXTI7: [15:12] = 0 (PA)
     ; EXTI6: [11:8]  = 1 (PB)
     ; EXTI5: [7:4]   = 1 (PB)
     ; EXTI4: [3:0]   = 1 (PB)
-    ; Target hex: 1111
+    ; Target hex: 0111
     LDR R0, =AFIO_EXTICR2
-    LDR R1, =0x1111            
+    LDR R1, =0x0111
     STR R1, [R0]
 
     ; EXTICR3: Controls EXTI8, EXTI9, EXTI10, EXTI11
-    ; PB8 (0x1)
-    ; EXTI8: [3:0] = 1 (PB)
-    ; Target hex: 0001
+    ; PA8 (0x0)
+    ; EXTI8: [3:0] = 0 (PA)
+    ; Target hex: 0000
     LDR R0, =AFIO_EXTICR3
-    LDR R1, =0x0001            
+    LDR R1, =0x0000
+    STR R1, [R0]
+
+    ; EXTICR4: Controls EXTI12, EXTI13, EXTI14, EXTI15
+    ; PA12 (0x0), PA15 (0x0)
+    ; EXTI12: [3:0]   = 0 (PA)
+    ; EXTI15: [15:12] = 0 (PA)
+    ; Target hex: 0000
+    LDR R0, =AFIO_EXTICR4
+    LDR R1, =0x0000
     STR R1, [R0]
 
 
     ; --- EXTI EDGE CONFIGURATION ---
     LDR R0, =EXTI_IMR
-    LDR R1, =0x01FB
+    LDR R1, =0x907B
     STR R1, [R0]
     
     LDR R0, =EXTI_RTSR
-    LDR R1, =0x009B            ; Rising edge for lines 0,1,3,4,7
+    LDR R1, =0x101B            ; Rising edge for lines 0,1,3,4,12
     STR R1, [R0]
     
     LDR R0, =EXTI_FTSR         ; <--- MODIFIED: Load Falling Trigger Selection Register
-    LDR R1, =0x0160            ; <--- MODIFIED: Falling edge for lines 5, 6, 8
+    LDR R1, =0x8060            ; <--- MODIFIED: Falling edge for lines 5, 6, 15
     STR R1, [R0]
 
     ; Clear stale pending EXTI flags before enabling NVIC
     LDR R0, =EXTI_PR
-    LDR R1, =0x01FB
+    LDR R1, =0x907B
     STR R1, [R0]
 
     ; --- TIMER 2 CONFIGURATION ---
@@ -199,6 +216,9 @@ config    FUNCTION
     ; --- NVIC CONFIGURATION ---
     LDR R0, =NVIC_ISER0
     LDR R1, =0x108006C0
+    STR R1, [R0]
+    LDR R0, =NVIC_ISER1
+    LDR R1, =0x00000100
     STR R1, [R0]
 	
 	BL hardware_init_audio

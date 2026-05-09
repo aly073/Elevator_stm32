@@ -5,6 +5,7 @@
     IMPORT  EXTI4_IRQHandler
     IMPORT  EXTI3_IRQHandler
     IMPORT  EXTI9_5_IRQHandler
+    IMPORT  EXTI15_10_IRQHandler
 	IMPORT  USART1_IRQHandler
     AREA    RESET, DATA, READONLY
     ALIGN   2
@@ -26,6 +27,8 @@ __Vectors
     DCD     TIM2_IRQHandler
     SPACE   32
     DCD     USART1_IRQHandler
+    SPACE   8
+    DCD     EXTI15_10_IRQHandler
 __Vectors_End
 __Vectors_Size  EQU __Vectors_End - __Vectors
 

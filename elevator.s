@@ -8,6 +8,7 @@
     EXPORT  EXTI4_IRQHandler
     EXPORT  EXTI3_IRQHandler
     EXPORT  EXTI9_5_IRQHandler
+    EXPORT  EXTI15_10_IRQHandler
     EXPORT  stopAndServe
     EXPORT  checkNextMove
     EXPORT  elevatorState
@@ -120,39 +121,6 @@ EXTI9_5_IRQHandler
     LDR R1, [R0]
 
 ; Must check manually which bit is 1 to know which line from 5-9 triggered the interrupt
-check_line7
-    TST R1, #(1 << 7)
-    BEQ check_line8
-    MOV R2, #(1 << 7)
-    STR R2, [R0]           ; Clear pending bit
-
-    LDR R3, =requests      ; Check Floor 2 car button request
-    LDRB R4, [R3, #1]
-    CMP R4, #1
-    BEQ exti9_5_end        ; Early exit if already requested
-
-    MOV R4, #1
-    STRB R4, [R3, #1]
-    LDR R0, =elevatorState
-    LDRB R0, [R0]
-    BL checkNextMove
-    B exti9_5_end
-
-check_line8
-    TST R1, #(1 << 8)
-    BEQ check_line5
-    MOV R2, #(1 << 8)
-    STR R2, [R0]           ; Clear pending bit
-
-    LDR R3, =currentFloor  ; PB8: Floor 1 sensor
-    LDRB R3, [R3]
-    CMP R3, #1
-    BEQ exti9_5_end        ; Early exit if we are already at Floor 1
-
-    MOV R0, #1
-    BL handle_sensor
-    B exti9_5_end
-
 check_line5
     TST R1, #(1 << 5)
     BEQ check_line6
@@ -183,6 +151,46 @@ check_line6
     BL handle_sensor
 
 exti9_5_end
+    POP {PC}
+
+; STM32 handles interrupt lines 10 to 15 in the same IRQ
+EXTI15_10_IRQHandler
+    PUSH {LR}
+    LDR R0, =EXTI_PR
+    LDR R1, [R0]
+
+    TST R1, #(1 << 15)
+    BEQ check_line12
+    MOV R2, #(1 << 15)
+    STR R2, [R0]           ; Clear pending bit
+
+    LDR R3, =currentFloor  ; PA15: Floor 1 sensor
+    LDRB R3, [R3]
+    CMP R3, #1
+    BEQ exti15_10_end      ; Early exit if we are already at Floor 1
+
+    MOV R0, #1
+    BL handle_sensor
+    B exti15_10_end
+
+check_line12
+    TST R1, #(1 << 12)
+    BEQ exti15_10_end
+    MOV R2, #(1 << 12)
+    STR R2, [R0]           ; Clear pending bit
+
+    LDR R3, =requests      ; Check Floor 2 car button request
+    LDRB R4, [R3, #1]
+    CMP R4, #1
+    BEQ exti15_10_end      ; Early exit if already requested
+
+    MOV R4, #1
+    STRB R4, [R3, #1]
+    LDR R0, =elevatorState
+    LDRB R0, [R0]
+    BL checkNextMove
+
+exti15_10_end
     POP {PC}
 
 ; =============================================================================
