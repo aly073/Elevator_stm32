@@ -27,6 +27,14 @@ GPIOB_BRR       EQU GPIOB_BASE + 0x14
 SPI1_BASE       EQU 0x40013000
 SPI1_CR1        EQU SPI1_BASE + 0x00
 
+; --- TIM1 Registers ---
+TIM1_BASE       EQU 0x40012C00
+TIM1_CR1        EQU TIM1_BASE + 0x00
+TIM1_DIER       EQU TIM1_BASE + 0x0C
+TIM1_SR         EQU TIM1_BASE + 0x10
+TIM1_PSC        EQU TIM1_BASE + 0x28
+TIM1_ARR        EQU TIM1_BASE + 0x2C
+
 ; --- EXTI Registers ---
 AFIO_BASE       EQU 0x40010000
 AFIO_EXTICR3    EQU AFIO_BASE + 0x10    
@@ -35,7 +43,9 @@ EXTI_IMR        EQU EXTI_BASE + 0x00
 EXTI_RTSR       EQU EXTI_BASE + 0x08    
 EXTI_FTSR       EQU EXTI_BASE + 0x0C    
 EXTI_PR         EQU EXTI_BASE + 0x14    
-NVIC_ISER0      EQU 0xE000E100          
+NVIC_ISER0      EQU 0xE000E100  
+NVIC_IPR6       EQU 0xE000E418          ; IRQ 24-27 Priority Register
+
 
 ; --- RC522 Registers ---
 CommandReg      EQU 0x01
@@ -66,49 +76,50 @@ uid_buffer  SPACE 5
 ; ==========================================
     AREA |.text|, CODE, READONLY, ALIGN=2
 
-
 	EXPORT rfid_init
 rfid_init PROC
-    ; Initialize R10 to 0
-    PUSH {R0-R12,LR}
-    mov r10, #0
-
-    ; 1. Enable Clocks
+    push {r0,r1,r2,lr}
+	mov r10, #0
+    ; 1. Enable Clocks (Added TIM1EN bit 11)
     ldr r0, =RCC_APB2ENR
     ldr r1, [r0]
-    ldr r2, =0x100D             
+    ldr r2, =0x180D             ; Bits for TIM1, SPI1, GPIOB, GPIOA, AFIO
     orr r1, r1, r2
     str r1, [r0]
 
-    ; 2. Configure GPIOA (SPI1 Pins: PA7, PA6, PA5, PA4 + RST: PA8)
-    ; PA7=B, PA6=4, PA5=B, PA4=4 (NSS must be defined for SPI to work)
+    ; 2. Configure GPIOA (SPI1 + RST)
     ldr r0, =GPIOA_CRL
     ldr r1, [r0]
-    ldr r2, =0x0000FFFF         ; Keep PA0-PA3, Clear PA4-PA7
-    and r1, r1, r2              
-    ldr r2, =0xB4B40000         ; Set PA7=B, PA6=4, PA5=B, PA4=4
+    ldr r2, =0x0000FFFF         ; Clear upper half (PA7 to PA4)
+    and r1, r1, r2
+    ldr r2, =0xB4B40000         ; Set Alternate Function for SPI
     orr r1, r1, r2
     str r1, [r0]
 
-    ; Configure PA8 (RST) = 3
     ldr r0, =GPIOA_CRH
     ldr r1, [r0]
-    ldr r2, =0xFFFFFFF0         ; Keep PA9-PA15, Clear PA8
-    and r1, r1, r2              
-    orr r1, r1, #0x00000003     ; Set PA8=3
+    ldr r2, =0xFFFFFFF0         ; Clear PA8 configuration bits
+    and r1, r1, r2
+    orr r1, r1, #0x03           ; Set PA8 to general purpose output push-pull
     str r1, [r0]
 
-    ; 3. Configure GPIOB (CS: PB12 + IRQ: PB9)
-    ; LED configs (GPIOB_CRL) removed entirely.
+    ; 3. Configure GPIOB (LEDs + CS + IRQ)
+    ldr r0, =GPIOB_CRL
+    ldr r1, [r0]
+    ldr r2, =0xFFFFFF00         ; Clear PB1 and PB0 configuration bits
+    and r1, r1, r2
+    orr r1, r1, #0x33           ; Set PB1, PB0 to output push-pull
+    str r1, [r0]
+
     ldr r0, =GPIOB_CRH
     ldr r1, [r0]
-    ldr r2, =0xFFF0FF0F         ; Keep PB15-13, PB11-10, PB8. Clear PB12 and PB9.
-    and r1, r1, r2              
-    ldr r2, =0x00030040         ; Set PB12=3 (Output), PB9=4 (Input Float)
+    ldr r2, =0xFFF0FFFF         ; Clear PB12 configuration bits
+    and r1, r1, r2
+    ldr r2, =0x00030000         ; Set PB12 to general purpose output
     orr r1, r1, r2
     str r1, [r0]
 
-    ; Set initial states for RST (PA8) and CS (PB12)
+    ; BSRR is Write-Only; set default states safely
     ldr r0, =GPIOA_BSRR
     ldr r1, =(1<<8)
     str r1, [r0]
@@ -117,38 +128,38 @@ rfid_init PROC
     str r1, [r0]
     bl delay_long               
 
-    ; 4. Setup EXTI9 (Port B, Pin 9)
+    ; 4. Setup EXTI9
     ldr r0, =AFIO_EXTICR3
     ldr r1, [r0]
-    ldr r2, =0xFFFFFF0F         ; Clear EXTI9 bits (7:4)
+    ldr r2, =0xFFFFFF0F         ; Clear EXTI9 selection bits
     and r1, r1, r2
-    orr r1, r1, #(0x1 << 4)     ; Set EXTI9 to Port B
+    orr r1, r1, #(0x1 << 4)     ; Select PB9 for EXTI9
     str r1, [r0]
 
     ldr r0, =EXTI_FTSR
     ldr r1, [r0]
-    orr r1, r1, #(1<<9)         
-    str r1, [r0]
-
-    ldr r0, =EXTI_RTSR
-    ldr r1, [r0]
-    orr r1, r1, #(1<<9)         
+    orr r1, r1, #(1<<9)         ; Enable falling edge trigger for Line 9
     str r1, [r0]
 
     ldr r0, =EXTI_IMR
     ldr r1, [r0]
-    orr r1, r1, #(1<<9)         
+    orr r1, r1, #(1<<9)         ; Unmask EXTI Line 9
     str r1, [r0]
 
+    ; Enable EXTI9 (Bit 23) and TIM1_UP (Bit 25) in NVIC
+    ; ISER0 is a Set-Enable register, write 1 has effect, write 0 has no effect
     ldr r0, =NVIC_ISER0
-    ldr r1, =(1<<23)            
+    ldr r1, =((1<<23) :OR: (1<<25))            
     str r1, [r0]
 
     ; 5. Configure SPI1
     ldr r0, =SPI1_CR1
-    ldr r1, =0x037C             
-    str r1, [r0]
-    orr r1, r1, #(1<<6)         
+    ldr r1, [r0]
+    ldr r2, =0xFFFFFC00         ; Clear lower configuration bits
+    and r1, r1, r2
+    ldr r2, =0x037C             ; Apply SPI setup
+    orr r1, r1, r2
+    orr r1, r1, #(1<<6)         ; Enable SPI (SPE bit)
     str r1, [r0]
 
     ; 6. Initialize RC522 
@@ -157,7 +168,7 @@ rfid_init PROC
     bl rc522_write
     bl delay_long               
 
-    ; FAST RECOVERY TIMER
+    ; FAST RECOVERY TIMER (30 instead of 1.5s)
     mov r0, #TModeReg
     mov r1, #0x8D               
     bl rc522_write
@@ -178,6 +189,7 @@ rfid_init PROC
     mov r1, #0x3D               
     bl rc522_write
 
+    ; Read-Modify-Write applied via SPI to the RC522 TxControl Reg
     mov r0, #TxControlReg
     bl rc522_read
     orr r1, r0, #0x03
@@ -187,26 +199,72 @@ rfid_init PROC
     mov r0, #DivIEnReg
     mov r1, #0x80               
     bl rc522_write
-    bl delay_short      
-    POP {R0-R12,LR}
-    ENDP
-		
-;===================================
-;       MAIN LOOP
-;===================================
+    bl delay_short              
 
+    ; 7. Setup TIM1 for 100ms periodic interrupt
+    ; RMW to Prescaler
+    ldr r0, =TIM1_PSC
+    ldr r1, [r0]
+    ldr r2, =0xFFFF0000
+    and r1, r1, r2
+    ldr r2, =7999               ; 8MHz / 8000 = 1kHz timer clock
+    orr r1, r1, r2
+    str r1, [r0]
+    
+    ; RMW to Auto-Reload
+    ldr r0, =TIM1_ARR
+    ldr r1, [r0]
+    ldr r2, =0xFFFF0000
+    and r1, r1, r2
+    ldr r2, =99                 ; 1kHz / 100 = 10Hz (100ms)
+    orr r1, r1, r2
+    str r1, [r0]
+    
+    ; RMW to Enable Update Interrupt
+    ldr r0, =TIM1_DIER
+    ldr r1, [r0]
+    orr r1, r1, #1                 
+    str r1, [r0]
+    
+    ; RMW to set lowest priority for TIM1_UP (IRQ 25)
+    ldr r0, =NVIC_IPR6
+    ldr r1, [r0]
+    ldr r2, =0xFFFF00FF         ; Mask out IRQ25 priority byte (bits 8-15)
+    and r1, r1, r2
+    ldr r2, =0x0000F000         ; Write 0xF0 (Lowest Priority) to IRQ25
+    orr r1, r1, r2
+    str r1, [r0]
+
+    ; Start TIM1 Counter
+    ldr r0, =TIM1_CR1
+    ldr r1, [r0]
+    orr r1, r1, #1                 
+    str r1, [r0]
+
+    pop {r0,r1,r2,pc}
+    ENDP
+
+;===================================
+;       TIMER HANDLER
+;===================================
 	
-	EXPORT main_loop
-main_loop	PROC
+    EXPORT TIM1_UP_IRQHandler
+TIM1_UP_IRQHandler PROC
+    push {r4, r5, r6, lr}       ; Save context
+
+    ; Clear TIM1 update interrupt flag
+    ldr r0, =TIM1_SR
+    ldr r1, [r0]
+    bic r1, r1, #1              ; Clear bit 0 (UIF)
+    str r1, [r0]
+
     ; Turn off LEDs and reset elevator flag
     ldr r0, =GPIOB_BRR
     ldr r1, =0x03
     str r1, [r0]
     mov r10, #0
 
-    bl delay_short              
-
-    ; 7. Ping antenna for REQA
+    ; 8. Ping antenna for REQA
     mov r0, #BitFramingReg
     mov r1, #0x07               
     bl rc522_write
@@ -239,10 +297,10 @@ main_loop	PROC
 
     bl wait_for_mfrc_irq        
     tst r0, #0x01               
-    bne main_loop               
+    bne tim1_exit               ; Changed to exit ISR instead of looping back
 
 process_card
-    ; 8. Anti-Collision Phase
+    ; 9. Anti-Collision Phase
     mov r0, #ComIEnReg
     mov r1, #0xF7
     bl rc522_write
@@ -281,21 +339,20 @@ process_card
     ldr r4, =100000            
 anti_poll
     subs r4, r4, #1
-    beq main_loop
+    beq tim1_exit               ; Exit ISR on timeout
 
     mov r0, #ComIrqReg
     bl rc522_read
     tst r0, #0x01               
-    bne main_loop
+    bne tim1_exit               ; Exit ISR on error
     tst r0, #0x30               
     beq anti_poll
 
     mov r0, #FIFOLevelReg
     bl rc522_read
     cmp r0, #5
-	beq continue
-    b main_loop 
-continue
+    bne tim1_exit               ; Exit ISR on invalid size
+
     ldr r4, =uid_buffer
     mov r5, #5
 read_uid_loop
@@ -305,7 +362,7 @@ read_uid_loop
     subs r5, r5, #1
     bne read_uid_loop
 
-    ; 9. Compare UID
+    ; 10. Compare UID
     ldr r4, =uid_buffer
     ldr r5, =target_uid
     mov r6, #4                  
@@ -319,12 +376,21 @@ compare_loop
 
 correct_card
     mov r10, #1                 ; SET R10 FOR ELEVATOR LOGIC
+    ldr r0, =GPIOB_BSRR
+    ldr r1, =0x01               
+    str r1, [r0]
     bl delay_long
-    b main_loop
+    b tim1_exit
 
 wrong_card
+    ldr r0, =GPIOB_BSRR
+    ldr r1, =0x02               
+    str r1, [r0]
     bl delay_long
-    b main_loop
+    b tim1_exit                 
+
+tim1_exit
+    pop {r4, r5, r6, pc}        ; Restore context and leave ISR
     ENDP
 
 ; ==========================================
@@ -332,7 +398,7 @@ wrong_card
 ; ==========================================
     EXPORT rfid_isr
 rfid_isr PROC
-    push {r0,r1,r2,lr}
+    push {r0,r1,lr}
     ldr r0, =EXTI_PR
     ldr r1, =(1<<9)
     str r1, [r0]
@@ -341,7 +407,7 @@ rfid_isr PROC
     str r1, [r0]
     dsb
     isb
-    pop {r0,r1,r2,pc}
+    pop {r0,r1,pc}
     ENDP
 
 clear_irqs PROC
