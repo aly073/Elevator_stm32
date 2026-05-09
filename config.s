@@ -34,12 +34,12 @@
 ;     - PA1: Floor 2 up button (EXTI1)
 ;     - PB4: Floor 2 down button (EXTI4)
 ;     - PB3: Floor 3 request button (EXTI3)
-;     - PB7: Floor 2 cabin button (inside elevator) (EXTI7)
+;     - PB7: Floor 2 cabin button (inside elevator) (EXTI7) --TO MOVE to pa12
 ;
 ;   - Sensors (functional mapping used by IRQ code):
-;     - PB8: Floor 1 sensor (EXTI8)
+;     - PB8: Floor 1 sensor (EXTI8) --TO MOVE to pa15
 ;     - PB5: Floor 2 sensor (EXTI5)
-;     - PB6: Floor 3 sensor (EXTI6) -- SHOULD BE CHANGED
+;     - PB6: Floor 3 sensor (EXTI6)
 ;
 ;   - LED Matrix:
 ;     - SPI Pins: PA5 (CLK), PA7 (DIN), PA4 (CS)
@@ -49,7 +49,7 @@
 ;
 ;	- Audio:
 ;	  - PA2 (RX)
-;      - PA3 (TX)
+;     - PA3 (TX)
 ;
 ;	- Load Cell:
 ;	  - PB14: DT
@@ -60,9 +60,15 @@
 ;	  - PA9: TX
 ;	  - PA10: RX
 
+;
+;   - Servo (for door control):
+;     - PB7: first floor door (TIM4_CH2 PWM output)
+;     - PB8: second floor door (TIM4_CH3 PWM output)
+;     - PB9: third floor door (TIM4_CH4 PWM output)
+;
+
 ;    - REMAINING PINS:
-;        PA8, PA11, PA12, PA15
-;        PB2, PB9, PB10, PB13
+;        PB2, PB10, PB13
 
 ;============================================================
 
