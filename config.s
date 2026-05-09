@@ -15,6 +15,7 @@
 	IMPORT  hardware_init_audio
     IMPORT  weight_sensor_init
     IMPORT  bluetooth_init
+    IMPORT  doors_init
 
 
 ;============================================================
@@ -110,7 +111,7 @@ config    FUNCTION
     STR R1, [R0, #GPIOx_CRL]
     LDR R1, [R0, #GPIOx_CRH]
     LDR R2, =0xF00F0000
-    BIC R1, R15, R2
+    BIC R1, R1, R2
     LDR R2, =0x80080000
     ORR R1, R1, R2
     STR R1, [R0, #GPIOx_CRH]
@@ -223,6 +224,7 @@ config    FUNCTION
 	
 	BL hardware_init_audio
     BL bluetooth_init
+    BL doors_init
     ; BL weight_sensor_init
 	
 ;============================================================

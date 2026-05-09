@@ -12,16 +12,12 @@
 
         AREA    doors, CODE, READONLY
         THUMB
-        ;GET     registers.inc
+        GET     registers.inc
 
         EXPORT  doors_init
         EXPORT  OPEN_DOOR ;R0 = floor (1, 2, 3). open that door's floor
         EXPORT  CLOSE_DOOR ;RO = floor (1, 2, 3). close that door's floor
         EXPORT  CLOSE_ALL_DOORS ;closes all doors before moving
-
-
-
-TIM4_BASE_ADDR  EQU     0x40000800
 
 ; TIM4 register offsets
 TIM4_CR1        EQU     0x00
@@ -35,13 +31,8 @@ TIM4_CCR2       EQU     0x38
 TIM4_CCR3       EQU     0x3C    
 TIM4_CCR4       EQU     0x40    
 
-RCC_APB1ENR_ADDR EQU    0x4002101C ;shouldnt be needed in integration because gpiob is enabled in config
 TIM4_CLK_BIT     EQU    (1 << 2)
-RCC_APB2ENR_ADDR EQU     0x40021018
 GPIOB_CLK_BIT    EQU     (1 << 3)
-
-GPIOB_CRL_ADDR  EQU     0x40010C00
-GPIOB_CRH_ADDR  EQU     0x40010C04
 
 ; servo pulse widths in microseconds 
 DOOR_OPEN_CCR   EQU     1000 ;1ms
@@ -56,33 +47,33 @@ DOOR_SETTLE_CNT EQU     12000000
 doors_init PROC
         PUSH    {R0-R3, LR}
 	    ; Enable GPIOB clock (already done in config but needed to separately enable it to test)
-        LDR     R0, =RCC_APB2ENR_ADDR
+        LDR     R0, =RCC_APB2ENR
         LDR     R1, [R0]
         ORR     R1, R1, #GPIOB_CLK_BIT
         STR     R1, [R0]
 
         ; enable TIM4 clock on APB1
-        LDR     R0, =RCC_APB1ENR_ADDR
+        LDR     R0, =RCC_APB1ENR
         LDR     R1, [R0]
         ORR     R1, R1, #TIM4_CLK_BIT
         STR     R1, [R0]
 
         ; CRL: PB7 -> bits [31:28] = 0xB
-        LDR     R0, =GPIOB_CRL_ADDR
+        LDR     R0, =GPIOB_CRL
         LDR     R1, [R0]
         BIC     R1, R1, #0xF0000000
         ORR     R1, R1, #0xB0000000
         STR     R1, [R0]
 
         ; CRH: PB8 bits [3:0] = 0xB, PB9 bits [7:4] = 0xB
-        LDR     R0, =GPIOB_CRH_ADDR
+        LDR     R0, =GPIOB_CRH
         LDR     R1, [R0]
         BIC     R1, R1, #0x000000FF     ; clear both nibbles
         ORR     R1, R1, #0x000000BB     ; PB9=0xB, PB8=0xB
         STR     R1, [R0]
 
         ; TIM4 PWM setup
-        LDR     R0, =TIM4_BASE_ADDR
+        LDR     R0, =TIM4_BASE
 
         ; PSC = 71
         LDR     R1, =71
@@ -133,7 +124,7 @@ doors_init PROC
 OPEN_DOOR PROC
         PUSH    {R0-R3, LR}
 
-        LDR     R1, =TIM4_BASE_ADDR
+        LDR     R1, =TIM4_BASE
         LDR     R2, =DOOR_OPEN_CCR
 
         CMP     R0, #1
@@ -167,7 +158,7 @@ od_done
 CLOSE_DOOR PROC
         PUSH    {R0-R3, LR}
 
-        LDR     R1, =TIM4_BASE_ADDR
+        LDR     R1, =TIM4_BASE
         LDR     R2, =DOOR_CLOSE_CCR
 
         CMP     R0, #1
@@ -202,7 +193,7 @@ cd_done
 CLOSE_ALL_DOORS PROC
         PUSH    {R0-R3, LR}
 
-        LDR     R0, =TIM4_BASE_ADDR
+        LDR     R0, =TIM4_BASE
         LDR     R1, =DOOR_CLOSE_CCR
 
         STR     R1, [R0, #TIM4_CCR2]   ; PB7 
