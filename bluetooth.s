@@ -151,16 +151,17 @@ match_fail
 match_success
         LDRB    r6, [r4]              ; r6 now contains the floor number ('0', '1', etc)
         LDR     r0, =msg_granted
-        BL      PLAY_BLUETOOTH_PAIRING_AUDIO
         BL      send_string           ; Send GRANTED to Flutter
 
         ; Evaluate floor command and set appropriate request
+        mov r10, #2
         CMP     r6, #0x31             ; '1'
         BEQ     floor1_request
         CMP     r6, #0x32             ; '2'
         BEQ     floor2_request
         CMP     r6, #0x33             ; '3'
         BEQ     floor3_request
+		BL      PLAY_BLUETOOTH_PAIRING_AUDIO
         B       reset_buffer          ; If '0' (probe) or unknown, just reset buffer
 
 floor1_request
@@ -173,7 +174,7 @@ floor1_request
 floor2_request
         LDR     r0, =EXTI_SWIER
         LDR     r1, [r0]
-        ORR     r1, r1, #(1 :SHL: 7)      ; EXTI line 7
+        ORR     r1, r1, #(1 :SHL: 4)      ; EXTI line 4
         STR     r1, [r0]
         B       reset_buffer
 

@@ -17,12 +17,7 @@
 DIR_MASK EQU 0x0802 
 
 GO_DOWN FUNCTION
-        PUSH    {R0-R3, LR}
-		
-		
-		;CLOSE ALL DOORS 
-        BL      CLOSE_ALL_DOORS
-		
+        PUSH    {R0-R3, LR}		
 		
 		
         LDR     R0, =GPIOB_ODR
@@ -36,6 +31,9 @@ GO_DOWN FUNCTION
 
         ; Check weight < Threshold
         BL check_weight
+		
+		;CLOSE ALL DOORS 
+        BL      CLOSE_ALL_DOORS
         
         ; Apply new state while preserving other bits
         BIC     R2, R2, R3          ; Clear PB1/PB11
@@ -81,10 +79,6 @@ GO_UP FUNCTION
         PUSH    {R0-R3, LR}
 		
 		
-		;CLOSE ALL DOORS 
-        BL      CLOSE_ALL_DOORS
-		
-		
         LDR     R0, =GPIOB_ODR
         LDR     R2, [R0]
         LDR     R3, =DIR_MASK
@@ -96,6 +90,9 @@ GO_UP FUNCTION
 
         ; Check weight < Threshold
         BL check_weight
+		
+		;CLOSE ALL DOORS 
+        BL      CLOSE_ALL_DOORS
         
         BIC     R2, R2, R3          ; Clear PB1/PB11
         ORR     R2, R2,	#(1 << 1)		    ; Set UP state
