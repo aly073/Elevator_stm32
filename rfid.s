@@ -79,7 +79,26 @@ uid_buffer  SPACE 5
 
     IMPORT PLAY_AUTHORIZATION_AUDIO
 
+	EXPORT spi1_common_init
 	EXPORT rfid_init
+
+spi1_common_init PROC
+    push {r0,r1,r2,lr}
+
+    ; Shared SPI1 setup for RC522 and the LED matrix:
+    ; mode 0, master, software NSS, 8-bit frames, slow baud rate.
+    ldr r0, =SPI1_CR1
+    ldr r1, [r0]
+    ldr r2, =0xFFFFFC00         ; Clear lower configuration bits
+    and r1, r1, r2
+    ldr r2, =0x037C             ; CPOL=0, CPHA=0, BR=fPCLK/256, MSTR, SSM, SSI
+    orr r1, r1, r2
+    orr r1, r1, #(1<<6)         ; Enable SPI (SPE bit)
+    str r1, [r0]
+
+    pop {r0,r1,r2,pc}
+    ENDP
+
 rfid_init PROC
     push {r0,r1,r2,lr}
     mov r10, #0
@@ -163,15 +182,8 @@ rfid_init PROC
     orr r1, r1, #(1<<8)
     str r1, [r0]
 
-    ; 5. Configure SPI1 (RMW)
-    ldr r0, =SPI1_CR1
-    ldr r1, [r0]
-    ldr r2, =0xFFFFFC00         ; Clear lower configuration bits
-    and r1, r1, r2
-    ldr r2, =0x037C             ; Apply SPI setup
-    orr r1, r1, r2
-    orr r1, r1, #(1<<6)         ; Enable SPI (SPE bit)
-    str r1, [r0]
+    ; 5. Configure shared SPI1 once for both peripherals
+    bl spi1_common_init
 
     ; 6. Initialize RC522 
     mov r0, #CommandReg

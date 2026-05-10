@@ -31,6 +31,7 @@
     IMPORT  pending_dir
 
     ; cross-module functions
+    IMPORT  spi1_common_init
     IMPORT  stopAndServe
     IMPORT  checkNextMove
     
@@ -181,11 +182,19 @@ send_16bit
     BIC R2, #CS_PIN
     STR R2, [R1, #0x0C]
     LDR R1, =SPI1_BASE
-    STR R0, [R1, #0x0C]
+    MOV R3, R0, LSR #8
+    STRB R3, [R1, #0x0C]
 wait_rxne
     LDR R2, [R1, #0x08]
     TST R2, #0x01
     BEQ wait_rxne
+    LDR R2, [R1, #0x0C]
+    UXTB R3, R0
+    STRB R3, [R1, #0x0C]
+wait_rxne_2
+    LDR R2, [R1, #0x08]
+    TST R2, #0x01
+    BEQ wait_rxne_2
     LDR R2, [R1, #0x0C]
 wait_bsy
     LDR R2, [R1, #0x08]
@@ -199,11 +208,7 @@ wait_bsy
 
 matrix_init
     PUSH {LR}
-    LDR R0, =SPI1_BASE
-    LDR R1, =0x0B1C
-    STR R1, [R0, #0x00]
-    ORR R1, #0x0040
-    STR R1, [R0, #0x00]
+    BL spi1_common_init
     MOVW R0, #0x0F00
     BL send_16bit
     MOVW R0, #0x0B07
