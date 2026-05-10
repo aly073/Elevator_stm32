@@ -269,11 +269,14 @@ TIM1_UP_IRQHandler PROC
     bic r1, r1, #1              ; Clear bit 0 (UIF)
     str r1, [r0]
 
-    ; Turn off LEDs and reset elevator flag (Direct Write to Write-Only Register)
-    ldr r0, =GPIOB_BRR
-    ldr r1, =0x03
-    str r1, [r0]
-    mov r10, #0
+    ; continue the r10 counter
+    cmp r10, #0
+    beq continue_reading
+    ; else decrement r10 and exit because already authorized
+    sub r10, r10, 1
+    b tim1_exit
+
+continue_reading
 
     ; 8. Ping antenna for REQA
     mov r0, #BitFramingReg
