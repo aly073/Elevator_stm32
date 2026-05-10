@@ -77,6 +77,8 @@ uid_buffer  SPACE 5
 ; ==========================================
     AREA |.text|, CODE, READONLY, ALIGN=2
 
+    IMPORT PLAY_AUTHORIZATION_AUDIO
+
 	EXPORT rfid_init
 rfid_init PROC
     push {r0,r1,r2,lr}
@@ -251,6 +253,7 @@ rfid_init PROC
 
     pop {r0,r1,r2,pc}
     ENDP
+    LTORG
 
 ;===================================
 ;       TIMER HANDLER
@@ -383,7 +386,8 @@ compare_loop
     bne compare_loop
 
 correct_card
-    mov r10, #1                 ; SET R10 FOR ELEVATOR LOGIC
+    mov r10, #50                ; SET R10 FOR ELEVATOR LOGIC
+    BL  PLAY_AUTHORIZATION_AUDIO
     ldr r0, =GPIOB_BSRR
     ldr r1, =0x01               
     str r1, [r0]

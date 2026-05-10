@@ -7,18 +7,21 @@
 
 ; Volume Max (30 / 0x1E)
 cmd_set_volume DCB 0x7E, 0xFF, 0x06, 0x06, 0x00, 0x00, 0x1E, 0xFE, 0xD7, 0xEF
-; Track 1 (0001.mp3) - For GO_UP/GO_DOWN
+; Track 1 (0001_duaa.mp3) - For GO_UP/GO_DOWN
 cmd_track_1    DCB 0x7E, 0xFF, 0x06, 0x03, 0x00, 0x00, 0x01, 0xFE, 0xF7, 0xEF
-; Track 2 (0002.mp3) - For STOP
+; Track 2 (0002_stop.mp3) - For STOP
 cmd_track_2    DCB 0x7E, 0xFF, 0x06, 0x03, 0x00, 0x00, 0x02, 0xFE, 0xF6, 0xEF
-; Track 3 (0003.mp3) - For WARNING
+; Track 3 (0003_warning.mp3) - For WARNING
 cmd_track_3    DCB 0x7E, 0xFF, 0x06, 0x03, 0x00, 0x00, 0x03, 0xFE, 0xF5, 0xEF
+; Track 4 (0004_authorization.mp3)
+cmd_track_4    DCB 0x7E, 0xFF, 0x06, 0x03, 0x00, 0x00, 0x04, 0xFE, 0xF4, 0xEF
 
         AREA    |.text|, CODE, READONLY
         ALIGN
         EXPORT  PLAY_MOVEMENT_AUDIO
         EXPORT  PLAY_STOP_AUDIO
         EXPORT  PLAY_WARNING_AUDIO
+        EXPORT  PLAY_AUTHORIZATION_AUDIO
         EXPORT  uart_send
         EXPORT  hardware_init_audio
 		IMPORT delay_systick
@@ -41,6 +44,13 @@ PLAY_STOP_AUDIO
 PLAY_WARNING_AUDIO
         PUSH    {R0, R1, LR}
         LDR     R0, =cmd_track_3
+        MOV     R1, #10
+        BL      uart_send
+        POP     {R0, R1, PC}
+
+PLAY_AUTHORIZATION_AUDIO
+        PUSH    {R0, R1, LR}
+        LDR     R0, =cmd_track_4
         MOV     R1, #10
         BL      uart_send
         POP     {R0, R1, PC}
