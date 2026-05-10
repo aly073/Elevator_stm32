@@ -5,20 +5,24 @@
 ; STM32 Blue Pill - Audio System File (USART2 on PA2)
 ; -------------------------------------------------------------------------
 
-EXTI_SWIER  EQU 0x40010410      ; Address for EXTI Software Interrupt Event Register
-
         AREA    |.data|, DATA, READWRITE
         ALIGN
 initialized DCD 0               ; Variable initialized to 0
 
         AREA    |.text|, CODE, READONLY
         ALIGN
+        GET registers.inc
         IMPORT STOP
         IMPORT PLAY_EMERGENCY_AUDIO ; Imported to resolve the branch link
 
-    EXPORT limit_switch_isr
-limit_switch_isr
+    EXPORT EXTI2_IRQHandler
+EXTI2_IRQHandler
     PUSH {lr}
+    
+    ; clear pending  bit
+    LDR R0, =EXTI_PR
+    MOV R1, #(1 << 2)
+    STR R1, [R0]
 
     ; Load the 'initialized' variable
     LDR     r2, =initialized

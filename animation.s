@@ -167,13 +167,13 @@ send_16bit
     LDR R2, [R1, #0x0C]
     BIC R2, #CS_PIN
     STR R2, [R1, #0x0C]
-    LDR R1, =SPI1_BASE
-    STR R0, [R1, #0x0C]
+    LDR R1, =SPI2_BASE
+    STRH R0, [R1, #0x0C]
 wait_rxne
     LDR R2, [R1, #0x08]
     TST R2, #0x01
     BEQ wait_rxne
-    LDR R2, [R1, #0x0C]
+    LDRH R2, [R1, #0x0C]
 wait_bsy
     LDR R2, [R1, #0x08]
     TST R2, #0x80
@@ -186,7 +186,7 @@ wait_bsy
 
 matrix_init
     PUSH {LR}
-    LDR R0, =SPI1_BASE
+    LDR R0, =SPI2_BASE
     LDR R1, =0x0B1C
     STR R1, [R0, #0x00]
     ORR R1, #0x0040

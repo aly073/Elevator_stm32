@@ -52,7 +52,7 @@
           <OutputName>Elevator_stm32</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
-          <CreateHexFile>0</CreateHexFile>
+          <CreateHexFile>1</CreateHexFile>
           <DebugInformation>1</DebugInformation>
           <BrowseInformation>1</BrowseInformation>
           <ListingPath>.\Listings\</ListingPath>
@@ -438,6 +438,11 @@
               <FileName>doors.s</FileName>
               <FileType>2</FileType>
               <FilePath>.\doors.s</FilePath>
+            </File>
+            <File>
+              <FileName>limitswitch.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\limitswitch.s</FilePath>
             </File>
           </Files>
         </Group>
