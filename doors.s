@@ -35,11 +35,11 @@ TIM4_CLK_BIT     EQU    (1 << 2)
 GPIOB_CLK_BIT    EQU     (1 << 3)
 
 ; servo pulse widths in microseconds 
-DOOR_OPEN_CCR   EQU     1000 ;1ms
-DOOR_CLOSE_CCR  EQU     2000  ;2ms 
+DOOR_CLOSE_CCR   EQU     1000 ;1ms
+DOOR_OPEN_CCR  EQU     2000  ;2ms 
 
 ; delay variable if needed?
-DOOR_SETTLE_CNT EQU     12000000
+DOOR_SETTLE_CNT EQU     1200000
 
 ; configure TIM4 CH2/CH3/CH4 for 50 Hz PWM on PB7/PB8/PB9
 ; all three doors are driven to the closed position

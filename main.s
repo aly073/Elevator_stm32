@@ -59,7 +59,7 @@ __Vectors_Size  EQU __Vectors_End - __Vectors
     IMPORT  STOP
     IMPORT  GO_UP
     IMPORT  OPEN_DOOR
-	IMPORT  CLOSE_DOOR
+	IMPORT  CLOSE_ALL_DOORS
 
 ;============================================================
 ; Main function
@@ -72,6 +72,9 @@ Reset_Handler FUNCTION
 
 __main FUNCTION
 	BL		config
+	
+	MOVS R0, #1
+    BL      OPEN_DOOR
 
 main_loop
     WFI			; Put CPU in low power state waiting for interrupt

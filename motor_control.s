@@ -6,12 +6,25 @@
     IMPORT  PLAY_MOVEMENT_AUDIO
     IMPORT  PLAY_STOP_AUDIO
     IMPORT  check_weight
+    IMPORT  current_num
+	IMPORT	currentFloor
+    IMPORT  OPEN_DOOR
+    IMPORT  CLOSE_DOOR
+    IMPORT  CLOSE_ALL_DOORS
+
 
 ; Mask for PB1 and PB11 (Bits 1 and 11) = 0x0802
 DIR_MASK EQU 0x0802 
 
 GO_DOWN FUNCTION
         PUSH    {R0-R3, LR}
+		
+		
+		;CLOSE ALL DOORS 
+        BL      CLOSE_ALL_DOORS
+		
+		
+		
         LDR     R0, =GPIOB_ODR
         LDR     R2, [R0]            ; Read current state
         LDR     R3, =DIR_MASK
@@ -50,6 +63,12 @@ STOP FUNCTION
         BIC     R2, R2, R3          ; Clear direction bits
         STR     R2, [R0]
 
+        ;Open the door for specific floor
+        LDR     R0, =currentFloor
+        LDRB R0, [R0]
+        ;MOVS R0, #1
+        BL      OPEN_DOOR
+
         ; === Trigger Audio (Only plays if we were actually moving)
         BL      PLAY_STOP_AUDIO
 
@@ -58,7 +77,14 @@ DONE_STOP
         ENDFUNC
 
 GO_UP FUNCTION
+
         PUSH    {R0-R3, LR}
+		
+		
+		;CLOSE ALL DOORS 
+        BL      CLOSE_ALL_DOORS
+		
+		
         LDR     R0, =GPIOB_ODR
         LDR     R2, [R0]
         LDR     R3, =DIR_MASK
