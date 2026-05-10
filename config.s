@@ -45,7 +45,7 @@
 ;     - PB6: Floor 3 sensor (EXTI6)
 ;
 ;   - LED Matrix:
-;     - SPI Pins: PA5 (CLK), PA7 (DIN), PA4 (CS)
+;     - SPI Pins: PB13 (CLK), PB15 (DIN), PA4 (CS)
 
 ;    - RFID:
 ;      - SPI Pins: PA5 (CLK), PA7 (DIN), PA6 (MISO), PB12 (CS), PB11 (IRQ), PA8 (RST)
@@ -71,7 +71,7 @@
 ;
 
 ;    - REMAINING PINS:
-;        PB2, PB15, PB13
+;        PB2
 
 ;============================================================
 
@@ -98,13 +98,14 @@ config    FUNCTION
     
     LDR R0, =RCC_APB2ENR
     LDR R1, [R0]
-    LDR R2, =0x100D
+    LDR R2, =0x000D            ; AFIO, GPIOA, GPIOB (SPI1 bit 12 is 0)
     ORR R1, R1, R2
     STR R1, [R0]
     
     LDR R0, =RCC_APB1ENR
     LDR R1, [R0]
-    ORR R1, R1, #0x01
+    LDR R2, =0x4001            ; SPI2 (bit 14) and TIM2 (bit 0)
+    ORR R1, R1, R2
     STR R1, [R0]
 
     ; --- GPIOA CONFIGURATION ---
@@ -138,9 +139,9 @@ config    FUNCTION
     STR R1, [R0, #GPIOx_CRL]
 
     LDR R1, [R0, #GPIOx_CRH]
-    LDR R2, =0x0000FF0F
+    LDR R2, =0xF0F0FF0F        ; Mask for PB15, PB13, PB11, PB10, PB9, PB8
     BIC R1, R1, R2
-    LDR R2, =0x00007708
+    LDR R2, =0xB0B07708        ; PB15=AFPP(B), PB13=AFPP(B), PB11=In(8), PB10=In(8), PB9/PB8=Servo(7)
     ORR R1, R1, R2
     STR R1, [R0, #GPIOx_CRH]
     

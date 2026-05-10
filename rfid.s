@@ -94,9 +94,9 @@ rfid_init PROC
     ; 2. Configure GPIOA (SPI1 + PA8 RST + PA11 EXTI) (RMW)
     ldr r0, =GPIOA_CRL
     ldr r1, [r0]
-    ldr r2, =0x0000FFFF         ; Clear upper half (PA7 to PA4)
+    ldr r2, =0x000FFFFF         ; Clear upper bits (PA7 to PA5), preserve PA4-PA0
     and r1, r1, r2
-    ldr r2, =0xB4B40000         ; Set Alternate Function for SPI
+    ldr r2, =0xB4B00000         ; Set PA7=AFPP(B), PA6=In(4), PA5=AFPP(B)
     orr r1, r1, r2
     str r1, [r0]
 
