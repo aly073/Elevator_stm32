@@ -18,6 +18,9 @@ cmd_track_4    DCB 0x7E, 0xFF, 0x06, 0x03, 0x00, 0x00, 0x04, 0xFE, 0xF4, 0xEF
 ; Track 5 (0005_emergency.mp3) - For EMERGENCY
 cmd_track_5    DCB 0x7E, 0xFF, 0x06, 0x03, 0x00, 0x00, 0x05, 0xFE, 0xF3, 0xEF
 
+; Track 6 (0006_bluetooth_pairing.mp3) - For BLUETOOTH PAIRING
+cmd_track_6    DCB 0x7E, 0xFF, 0x06, 0x03, 0x00, 0x00, 0x06, 0xFE, 0xF2, 0xEF
+
         AREA    |.text|, CODE, READONLY
         ALIGN
         EXPORT  PLAY_MOVEMENT_AUDIO
@@ -25,6 +28,7 @@ cmd_track_5    DCB 0x7E, 0xFF, 0x06, 0x03, 0x00, 0x00, 0x05, 0xFE, 0xF3, 0xEF
         EXPORT  PLAY_WARNING_AUDIO
         EXPORT  PLAY_AUTHORIZATION_AUDIO
         EXPORT  PLAY_EMERGENCY_AUDIO
+        EXPORT  PLAY_BLUETOOTH_PAIRING_AUDIO
         EXPORT  uart_send
         EXPORT  hardware_init_audio
 		IMPORT delay_systick
@@ -61,6 +65,14 @@ PLAY_AUTHORIZATION_AUDIO
 PLAY_EMERGENCY_AUDIO
         PUSH    {R0, R1, LR}
         LDR     R0, =cmd_track_5
+        MOV     R1, #10
+        BL      uart_send
+        POP     {R0, R1, PC}
+
+; Play Bluetooth pairing audio (Track 6)
+PLAY_BLUETOOTH_PAIRING_AUDIO
+        PUSH    {R0, R1, LR}
+        LDR     R0, =cmd_track_6
         MOV     R1, #10
         BL      uart_send
         POP     {R0, R1, PC}

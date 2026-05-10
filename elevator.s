@@ -4,7 +4,6 @@
 
     EXPORT  EXTI0_IRQHandler
     EXPORT  EXTI1_IRQHandler
-    EXPORT  EXTI2_IRQHandler
     EXPORT  EXTI4_IRQHandler
     EXPORT  EXTI3_IRQHandler
     EXPORT  EXTI9_5_IRQHandler
@@ -68,13 +67,6 @@ EXTI1_IRQHandler
     LDRB R0, [R0]
     BL checkNextMove
 exti1_end
-    POP {PC}
-
-EXTI2_IRQHandler
-    PUSH {LR}
-    LDR R0, =EXTI_PR
-    MOV R1, #(1 << 2)
-    STR R1, [R0]           ; Clear any stray EXTI2 pending bit
     POP {PC}
 
 EXTI4_IRQHandler
@@ -160,6 +152,7 @@ EXTI15_10_IRQHandler
     LDR R0, =EXTI_PR
     LDR R1, [R0]
 
+check_line11
     TST R1, #(1<<11)
     BEQ check_line15
     BL  rfid_isr

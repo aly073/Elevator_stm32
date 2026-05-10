@@ -68,6 +68,8 @@
 ;     - PB7: first floor door (TIM4_CH2 PWM output)
 ;     - PB8: second floor door (TIM4_CH3 PWM output)
 ;     - PB9: third floor door (TIM4_CH4 PWM output)
+
+;   - Limit Switch: PB2 - EXTI2
 ;
 
 ;    - REMAINING PINS:
@@ -154,9 +156,9 @@ config    FUNCTION
 
     ; --- AFIO EXTI MAPPING ---
     ; EXTICR1: Controls EXTI0, EXTI1, EXTI2, EXTI3
-    ; PA0 (0x0), PA1 (0x0), PA2 (0x0), PB3 (0x1) -> Target value: 0x1000
+    ; PA0 (0x0), PA1 (0x0), PB2 (0x1), PB3 (0x1) -> Target value: 0x1100
     LDR R0, =AFIO_EXTICR1
-    LDR R1, =0x1000            ; EXTI3 mapped to PB3
+    LDR R1, =0x1100            ; EXTI3 mapped to PB3
     STR R1, [R0]
 
     ; EXTICR2: Controls EXTI4, EXTI5, EXTI6, EXTI7
@@ -338,7 +340,7 @@ config    FUNCTION
     STRH    R1, [R0, #0x00]
 	
 	; startup routine using limit switch
-	;BL 		GO_DOWN
+	; BL 		GO_DOWN
 	
 
 	POP     {R0-R12, PC}
