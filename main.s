@@ -58,6 +58,8 @@ __Vectors_Size  EQU __Vectors_End - __Vectors
     IMPORT  GO_DOWN
     IMPORT  STOP
     IMPORT  GO_UP
+    IMPORT  OPEN_DOOR
+	IMPORT  CLOSE_DOOR
 
 ;============================================================
 ; Main function

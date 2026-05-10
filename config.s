@@ -226,7 +226,7 @@ config    FUNCTION
 	
 	BL hardware_init_audio
     BL bluetooth_init
-    ;BL doors_init
+    BL doors_init
     ; BL weight_sensor_init
 	
 ;============================================================
@@ -264,8 +264,8 @@ config    FUNCTION
     LDR R0, =pending_dir
     STR R1, [R0]
 
-    ;BL matrix_init
-    ;BL draw_initial_state
+    BL matrix_init
+    BL draw_initial_state
 	BL rfid_init
 
 
