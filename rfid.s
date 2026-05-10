@@ -226,7 +226,7 @@ rfid_init PROC
     ldr r1, [r0]
     ldr r2, =0xFFFF0000
     and r1, r1, r2
-    ldr r2, =99                 ; 1kHz / 100 = 10Hz (100ms)
+    ldr r2, =990                 ; 1kHz / 100 = 10Hz (100ms)
     orr r1, r1, r2
     str r1, [r0]
     

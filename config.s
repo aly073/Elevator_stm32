@@ -48,7 +48,7 @@
 ;     - SPI Pins: PB13 (CLK), PB15 (DIN), PA4 (CS)
 
 ;    - RFID:
-;      - SPI Pins: PA5 (CLK), PA7 (DIN), PA6 (MISO), PB12 (CS), PB11 (IRQ), PA8 (RST)
+;      - SPI Pins: PA5 (CLK), PA7 (DIN), PA6 (MISO), PB12 (CS), PA11 (IRQ), PA8 (RST)
 ;
 ;	- Audio:
 ;	  - PA2 (RX)
@@ -267,10 +267,10 @@ config    FUNCTION
     STR R1, [R0]
     LDR R0, =pending_dir
     STR R1, [R0]
+	BL rfid_init
 
     BL matrix_init
     BL draw_initial_state
-	;BL rfid_init
 
 
 
