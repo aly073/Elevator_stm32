@@ -4,7 +4,7 @@
 ;   TIM4_CH4  PB9  -> servo 3
 
 ;   pwm parameters
-;   PSC  = 71      -> Timer clock = 72 MHz / (71+1) = 1 MHz  (1 count = 1 us)
+;   PSC  = 7       -> Timer clock = 8 MHz / (7+1) = 1 MHz  (1 count = 1 us)
 ;   ARR  = 19999   -> Period = 20 ms  (50 hz)
 ;   CCR  OPEN = 1000  
 ;   CCR  CLOSE = 2000  
@@ -75,8 +75,8 @@ doors_init PROC
         ; TIM4 PWM setup
         LDR     R0, =TIM4_BASE
 
-        ; PSC = 71
-        LDR     R1, =71
+        ; PSC = 7
+        LDR     R1, =7
         STR     R1, [R0, #TIM4_PSC]
 
         ; ARR = 19999
