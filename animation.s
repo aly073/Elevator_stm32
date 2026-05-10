@@ -6,6 +6,9 @@
     THUMB
     GET     registers.inc
 
+
+    TIM1_UP_IRQ_BIT EQU (1 << 25)
+
     ; ========= Exports (functions provided by this file) =========
     EXPORT  TIM2_IRQHandler
     EXPORT  get_bitmap_ptr_current
@@ -37,6 +40,11 @@ TIM2_IRQHandler
     LDR R0, =TIM2_BASE
     MOV R1, #0
     STR R1, [R0, #0x10]
+
+    ; Disable TIM1 Interrupts while animating ---
+    LDR R0, =NVIC_ICER0
+    LDR R1, =TIM1_UP_IRQ_BIT
+    STR R1, [R0]
 
     LDR R0, =anim_active
     LDR R1, [R0]
@@ -130,6 +138,11 @@ finish_anim
     LDR R1, [R0, #0x00]
     BIC R1, R1, #1
     STR R1, [R0, #0x00]
+
+    ; Re-enable TIM1 Interrupts now that animation is done ---
+    LDR R0, =NVIC_ISER0
+    LDR R1, =TIM1_UP_IRQ_BIT
+    STR R1, [R0]
 
     LDR R0, =pending_stop
     LDR R1, [R0]
