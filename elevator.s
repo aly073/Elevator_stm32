@@ -37,6 +37,9 @@ EXTI0_IRQHandler
     MOV R1, #(1 << 0)
     STR R1, [R0]           ; Clear pending bit first
 
+    cmp r10, #0
+    beq exti0_end
+
     LDR R0, =requests      ; Check Floor 1 request
     LDRB R1, [R0, #0]
     CMP R1, #1
@@ -55,6 +58,9 @@ EXTI1_IRQHandler
     LDR R0, =EXTI_PR
     MOV R1, #(1 << 1)
     STR R1, [R0]           ; Clear pending bit first
+
+    cmp r10, #0
+    beq exti1_end
 
     LDR R0, =requests      ; Check Floor 2 UP request
     LDRB R1, [R0, #2]
@@ -75,6 +81,9 @@ EXTI4_IRQHandler
     MOV R1, #(1 << 4)
     STR R1, [R0]           ; Clear pending bit first
 
+    cmp r10, #0
+    beq exti4_end
+
     LDR R0, =requests      ; Check Floor 2 DOWN request
     LDRB R1, [R0, #3]
     CMP R1, #1
@@ -93,6 +102,9 @@ EXTI3_IRQHandler
     LDR R0, =EXTI_PR
     MOV R1, #(1 << 3)
     STR R1, [R0]           ; Clear pending bit first
+
+    cmp r10, #0
+    beq exti3_end
 
     LDR R0, =requests      ; Check Floor 3 request
     LDRB R1, [R0, #4]
@@ -178,6 +190,9 @@ check_line12
     BEQ exti15_10_end
     MOV R2, #(1 << 12)
     STR R2, [R0]           ; Clear pending bit
+
+    cmp r10, #0
+    beq exti15_10_end
 
     LDR R3, =requests      ; Check Floor 2 car button request
     LDRB R4, [R3, #1]

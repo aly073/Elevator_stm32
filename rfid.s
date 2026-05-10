@@ -273,7 +273,7 @@ TIM1_UP_IRQHandler PROC
     cmp r10, #0
     beq continue_reading
     ; else decrement r10 and exit because already authorized
-    sub r10, r10, 1
+    sub r10, r10, #1
     b tim1_exit
 
 continue_reading
@@ -389,7 +389,7 @@ compare_loop
     bne compare_loop
 
 correct_card
-    mov r10, #50                ; SET R10 FOR ELEVATOR LOGIC
+    mov r10, #10             ; SET R10 FOR ELEVATOR LOGIC
     BL  PLAY_AUTHORIZATION_AUDIO
     ldr r0, =GPIOB_BSRR
     ldr r1, =0x01               

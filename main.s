@@ -73,8 +73,8 @@ Reset_Handler FUNCTION
 __main FUNCTION
 	BL		config
 	
-	MOVS R0, #1
-    BL      OPEN_DOOR
+	;MOVS R0, #1
+    ;BL      OPEN_DOOR
 
 main_loop
     WFI			; Put CPU in low power state waiting for interrupt
