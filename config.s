@@ -17,6 +17,7 @@
     IMPORT  bluetooth_init
     IMPORT  doors_init
 	IMPORT 	rfid_init
+	IMPORT 	GO_DOWN
 
 
 ;============================================================
@@ -334,6 +335,10 @@ config    FUNCTION
     LDRH    R1, [R0, #0x00]
     ORR     R1, R1, #1
     STRH    R1, [R0, #0x00]
+	
+	; startup routine using limit switch
+	BL 		GO_DOWN
+	
 
 	POP     {R0-R12, PC}
 	ENDFUNC

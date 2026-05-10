@@ -15,6 +15,8 @@ cmd_track_2    DCB 0x7E, 0xFF, 0x06, 0x03, 0x00, 0x00, 0x02, 0xFE, 0xF6, 0xEF
 cmd_track_3    DCB 0x7E, 0xFF, 0x06, 0x03, 0x00, 0x00, 0x03, 0xFE, 0xF5, 0xEF
 ; Track 4 (0004_authorization.mp3)
 cmd_track_4    DCB 0x7E, 0xFF, 0x06, 0x03, 0x00, 0x00, 0x04, 0xFE, 0xF4, 0xEF
+; Track 5 (0005_emergency.mp3) - For EMERGENCY
+cmd_track_5    DCB 0x7E, 0xFF, 0x06, 0x03, 0x00, 0x00, 0x05, 0xFE, 0xF3, 0xEF
 
         AREA    |.text|, CODE, READONLY
         ALIGN
@@ -22,6 +24,7 @@ cmd_track_4    DCB 0x7E, 0xFF, 0x06, 0x03, 0x00, 0x00, 0x04, 0xFE, 0xF4, 0xEF
         EXPORT  PLAY_STOP_AUDIO
         EXPORT  PLAY_WARNING_AUDIO
         EXPORT  PLAY_AUTHORIZATION_AUDIO
+        EXPORT  PLAY_EMERGENCY_AUDIO
         EXPORT  uart_send
         EXPORT  hardware_init_audio
 		IMPORT delay_systick
@@ -51,6 +54,13 @@ PLAY_WARNING_AUDIO
 PLAY_AUTHORIZATION_AUDIO
         PUSH    {R0, R1, LR}
         LDR     R0, =cmd_track_4
+        MOV     R1, #10
+        BL      uart_send
+        POP     {R0, R1, PC}
+
+PLAY_EMERGENCY_AUDIO
+        PUSH    {R0, R1, LR}
+        LDR     R0, =cmd_track_5
         MOV     R1, #10
         BL      uart_send
         POP     {R0, R1, PC}
