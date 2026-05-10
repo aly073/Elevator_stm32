@@ -48,7 +48,7 @@
 ;     - SPI Pins: PA5 (CLK), PA7 (DIN), PA4 (CS)
 
 ;    - RFID:
-;      - SPI Pins: PA5 (CLK), PA7 (DIN), PA6 (MISO), PB12 (CS)
+;      - SPI Pins: PA5 (CLK), PA7 (DIN), PA6 (MISO), PB12 (CS), PB11 (IRQ), PA8 (RST)
 ;
 ;	- Audio:
 ;	  - PA2 (RX)
@@ -56,7 +56,7 @@
 ;
 ;	- Load Cell:
 ;	  - PB14: DT
-;	  - PB15: SCK
+;	  - PB10: SCK
 
 ;
 ;	- Bluetooth:
@@ -71,7 +71,7 @@
 ;
 
 ;    - REMAINING PINS:
-;        PB2, PB10, PB13
+;        PB2, PB15, PB13
 
 ;============================================================
 
@@ -337,7 +337,7 @@ config    FUNCTION
     STRH    R1, [R0, #0x00]
 	
 	; startup routine using limit switch
-	BL 		GO_DOWN
+	;BL 		GO_DOWN
 	
 
 	POP     {R0-R12, PC}
