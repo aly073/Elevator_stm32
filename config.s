@@ -228,7 +228,7 @@ config    FUNCTION
 	BL hardware_init_audio
     BL bluetooth_init
     BL doors_init
-    ; BL weight_sensor_init
+    BL weight_sensor_init
 	
 ;============================================================
 ; INITIAL STATE
@@ -267,7 +267,7 @@ config    FUNCTION
 
     BL matrix_init
     BL draw_initial_state
-	BL rfid_init
+	;BL rfid_init
 
 
 
