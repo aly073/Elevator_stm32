@@ -389,7 +389,7 @@ compare_loop
     bne compare_loop
 
 correct_card
-    mov r10, #50                ; SET R10 FOR ELEVATOR LOGIC - this number sets how long authorization lasts
+    mov r10, #50                ; SET R10 FOR ELEVATOR LOGIC
     BL  PLAY_AUTHORIZATION_AUDIO
     ldr r0, =GPIOB_BSRR
     ldr r1, =0x01               
