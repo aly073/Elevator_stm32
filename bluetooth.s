@@ -43,6 +43,7 @@ rx_buffer       SPACE   32            ; Buffer to hold "UID:XXXX:Y"
         IMPORT  requests
         IMPORT  checkNextMove
         IMPORT  elevatorState
+        IMPORT  PLAY_BLUETOOTH_PAIRING_AUDIO
 
 bluetooth_init PROC
         PUSH    {r0-r12, lr}
@@ -150,6 +151,7 @@ match_fail
 match_success
         LDRB    r6, [r4]              ; r6 now contains the floor number ('0', '1', etc)
         LDR     r0, =msg_granted
+        BL      PLAY_BLUETOOTH_PAIRING_AUDIO
         BL      send_string           ; Send GRANTED to Flutter
 
         ; Evaluate floor command and set appropriate request
