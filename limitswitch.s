@@ -14,14 +14,75 @@ initialized DCD 0               ; Variable initialized to 0
         GET registers.inc
         IMPORT STOP
         IMPORT PLAY_EMERGENCY_AUDIO ; Imported to resolve the branch link
+		IMPORT currentFloor
+		IMPORT GO_UP
+		EXPORT initialized
 
-    EXPORT EXTI2_IRQHandler
-EXTI2_IRQHandler
+    EXPORT limit_switch_init
+limit_switch_init
+
+    PUSH {r0,r1,lr}
+
+    ; Enable clocks: AFIO and GPIOA (RCC_APB2ENR |= AFIOEN | GPIOA)
+    LDR r0, =RCC_APB2ENR
+    LDR r1, [r0]
+    LDR r2, =RCC_APB2ENR_AFIOEN
+    ORR r1, r1, r2
+    LDR r2, =RCC_APB2ENR_GPIOA
+    ORR r1, r1, r2
+    STR r1, [r0]
+
+    ; Configure PA8 as input pull-down (CRH bits for pin8 = CNF=10, MODE=00 -> 0x8)
+    LDR r0, =GPIOA_CRH
+    LDR r1, [r0]
+    BIC r1, r1, #0xF        ; clear bits [3:0] for pin8
+    ORR r1, r1, #0x8        ; set CNF=10, MODE=00
+    STR r1, [r0]
+
+    ; Ensure ODR bit for PA8 is 0 to select pull-down
+    LDR r0, =GPIOA_ODR
+    LDR r1, [r0]
+    BIC r1, r1, #(1 << 8)
+    STR r1, [r0]
+
+    ; Map EXTI8 --> Port A via AFIO_EXTICR3[3:0] = 0 (use RMW)
+    LDR r0, =AFIO_EXTICR3
+    LDR r1, [r0]
+    BIC r1, r1, #0xF        ; clear EXTI8 field
+    STR r1, [r0]
+
+    ; Unmask EXTI line 8 (RMW)
+    LDR r0, =EXTI_IMR
+    LDR r1, [r0]
+    ORR r1, r1, #(1 << 8)
+    STR r1, [r0]
+
+    ; Trigger on rising edge (RMW) — adjust if you prefer falling/both
+    LDR r0, =EXTI_RTSR
+    LDR r1, [r0]
+    ORR r1, r1, #(1 << 8)
+    STR r1, [r0]
+
+    ; Clear any pending EXTI8 (W1C - write only the bit to clear)
+    LDR r0, =EXTI_PR
+    MOV r1, #(1 << 8)
+    STR r1, [r0]
+	
+	LDR R0, =initialized
+	MOV R1, #0
+	STR R1, [R0]
+
+    POP {r0,r1,pc}
+
+
+
+    EXPORT limit_switch_isr
+limit_switch_isr
     PUSH {lr}
     
-    ; clear pending  bit
+    ; clear pending bit for EXTI8 (W1C - do NOT RMW here)
     LDR R0, =EXTI_PR
-    MOV R1, #(1 << 2)
+    MOV R1, #(1 << 8)
     STR R1, [R0]
 
     ; Load the 'initialized' variable
@@ -31,18 +92,26 @@ EXTI2_IRQHandler
     BNE     emergency_action    ; If initialized != 0, skip to emergency audio
 
 startup_action
-    ; Set 'initialized' to 1 so this block never runs again
+	
+	BL GO_UP
+
+wait_pa15_low
+    LDR     r0, =GPIOA_IDR
+    LDR     r1, [r0]
+    TST     r1, #(1 << 15)
+    BNE     wait_pa15_low	
+	
+	BL STOP
+    
+	
+	; Set 'initialized' to 1 so this block never runs again
+	LDR 	r2, =initialized
     MOV     r3, #1
     STR     r3, [r2]
 
-    ; Make a request to floor 1 by triggering EXTI Line 0
-    LDR     r0, =EXTI_SWIER
-    LDR     r1, [r0]
-    ORR     r1, r1, #(1 :SHL: 0)      ; Set bit 0 for EXTI line 0
-    STR     r1, [r0]
-    
-    B       end_isr             ; Exit the ISR
+	B       end_isr             ; Exit the ISR
 
+	
 emergency_action
     BL STOP                     ; turn off motor
     BL PLAY_EMERGENCY_AUDIO     ; play audio

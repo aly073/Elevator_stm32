@@ -11,6 +11,7 @@
     IMPORT  OPEN_DOOR
     IMPORT  CLOSE_DOOR
     IMPORT  CLOSE_ALL_DOORS
+	IMPORT 	initialized
 
 
 ; Mask for PB1 and PB11 (Bits 1 and 11) = 0x0802
@@ -42,6 +43,10 @@ GO_DOWN FUNCTION
         STR     R2, [R0]
 
         ; === Trigger Audio (Only plays if we weren't already going down)
+        LDR     R0, =initialized
+        LDR     R1, [R0]
+        CMP     R1, #0
+        BEQ     DONE_DOWN
         BL      PLAY_MOVEMENT_AUDIO
 
 DONE_DOWN
@@ -67,7 +72,11 @@ STOP FUNCTION
         ;MOVS R0, #1
         BL      OPEN_DOOR
 
-        ; === Trigger Audio (Only plays if we were actually moving)
+        ; === Trigger Audio if initialized
+        LDR     R0, =initialized
+        LDR     R1, [R0]
+        CMP     R1, #0
+        BEQ     DONE_STOP
         BL      PLAY_STOP_AUDIO
 
 DONE_STOP
@@ -98,7 +107,11 @@ GO_UP FUNCTION
         ORR     R2, R2,	#(1 << 1)		    ; Set UP state
         STR     R2, [R0]
 
-        ; === Trigger Audio
+        ; === Trigger Audio if initialized
+        LDR     R0, =initialized
+        LDR     R1, [R0]
+        CMP     R1, #0
+        BEQ     DONE_UP
         BL      PLAY_MOVEMENT_AUDIO
 
 DONE_UP

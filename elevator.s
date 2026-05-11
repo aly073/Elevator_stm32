@@ -24,6 +24,7 @@
     IMPORT  STOP
     IMPORT  GO_UP
     IMPORT  rfid_isr
+    IMPORT  limit_switch_isr
 
 ; =============================================================================
 ; ELEVATOR LOGIC & INTERRUPTS
@@ -143,7 +144,7 @@ check_line5
 
 check_line6
     TST R1, #(1 << 6)
-    BEQ exti9_5_end
+    BEQ check_line8
     MOV R2, #(1 << 6)
     STR R2, [R0]           ; Clear pending bit
 
@@ -154,6 +155,12 @@ check_line6
 
     MOV R0, #3
     BL handle_sensor
+
+check_line8
+    TST R1, #(1 << 8)
+    BEQ exti9_5_end
+    BL limit_switch_isr
+
 
 exti9_5_end
     POP {PC}

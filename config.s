@@ -18,6 +18,7 @@
     IMPORT  doors_init
 	IMPORT 	rfid_init
 	IMPORT 	GO_DOWN
+    IMPORT  limit_switch_init
 
 
 ;============================================================
@@ -340,7 +341,8 @@ config    FUNCTION
     STRH    R1, [R0, #0x00]
 	
 	; startup routine using limit switch
-	; BL 		GO_DOWN
+    BL limit_switch_init
+	BL 		GO_DOWN
 	
 
 	POP     {R0-R12, PC}
