@@ -21,6 +21,9 @@ cmd_track_5    DCB 0x7E, 0xFF, 0x06, 0x03, 0x00, 0x00, 0x05, 0xFE, 0xF3, 0xEF
 ; Track 6 (0006_bluetooth_pairing.mp3) - For BLUETOOTH PAIRING
 cmd_track_6    DCB 0x7E, 0xFF, 0x06, 0x03, 0x00, 0x00, 0x06, 0xFE, 0xF2, 0xEF
 
+; Track 7 (0007_startup.mp3) - For STARTUP
+cmd_track_7    DCB 0x7E, 0xFF, 0x06, 0x03, 0x00, 0x00, 0x07, 0xFE, 0xF1, 0xEF
+
         AREA    |.text|, CODE, READONLY
         ALIGN
         EXPORT  PLAY_MOVEMENT_AUDIO
@@ -29,6 +32,7 @@ cmd_track_6    DCB 0x7E, 0xFF, 0x06, 0x03, 0x00, 0x00, 0x06, 0xFE, 0xF2, 0xEF
         EXPORT  PLAY_AUTHORIZATION_AUDIO
         EXPORT  PLAY_EMERGENCY_AUDIO
         EXPORT  PLAY_BLUETOOTH_PAIRING_AUDIO
+                EXPORT  PLAY_STARTUP_AUDIO
         EXPORT  uart_send
         EXPORT  hardware_init_audio
 		IMPORT delay_systick
@@ -77,6 +81,14 @@ PLAY_BLUETOOTH_PAIRING_AUDIO
         BL      uart_send
         POP     {R0, R1, PC}
 
+; Play startup audio (Track 7)
+PLAY_STARTUP_AUDIO
+        PUSH    {R0, R1, LR}
+        LDR     R0, =cmd_track_7
+        MOV     R1, #10
+        BL      uart_send
+        POP     {R0, R1, PC}
+
 ; --- Hardware Initialization ---
 hardware_init_audio
         PUSH    {LR}
@@ -121,6 +133,8 @@ hardware_init_audio
         LDR     R0, =cmd_set_volume
         MOV     R1, #10
         BL      uart_send
+
+                BL      PLAY_STARTUP_AUDIO
         
         POP     {PC}
 
