@@ -32,17 +32,17 @@ limit_switch_init
     ORR r1, r1, r2
     STR r1, [r0]
 
-    ; Configure PA8 as input pull-down (CRH bits for pin8 = CNF=10, MODE=00 -> 0x8)
+    ; Configure PA8 as input pull-up (CRH bits for pin8 = CNF=10, MODE=00 -> 0x8)
     LDR r0, =GPIOA_CRH
     LDR r1, [r0]
     BIC r1, r1, #0xF        ; clear bits [3:0] for pin8
     ORR r1, r1, #0x8        ; set CNF=10, MODE=00
     STR r1, [r0]
 
-    ; Ensure ODR bit for PA8 is 0 to select pull-down
+    ; Set ODR bit for PA8 to select pull-up
     LDR r0, =GPIOA_ODR
     LDR r1, [r0]
-    BIC r1, r1, #(1 << 8)
+    ORR r1, r1, #(1 << 8)
     STR r1, [r0]
 
     ; Map EXTI8 --> Port A via AFIO_EXTICR3[3:0] = 0 (use RMW)
@@ -57,8 +57,12 @@ limit_switch_init
     ORR r1, r1, #(1 << 8)
     STR r1, [r0]
 
-    ; Trigger on rising edge (RMW) — adjust if you prefer falling/both
+    ; Trigger on falling edge only (RMW)
     LDR r0, =EXTI_RTSR
+    LDR r1, [r0]
+    BIC r1, r1, #(1 << 8)
+    STR r1, [r0]
+    LDR r0, =EXTI_FTSR
     LDR r1, [r0]
     ORR r1, r1, #(1 << 8)
     STR r1, [r0]
@@ -79,8 +83,8 @@ limit_switch_init
     EXPORT limit_switch_isr
 limit_switch_isr
     PUSH {lr}
-    
-    ; clear pending bit for EXTI8 (W1C - do NOT RMW here)
+	
+	; clear pending bit for EXTI8 (W1C - do NOT RMW here)
     LDR R0, =EXTI_PR
     MOV R1, #(1 << 8)
     STR R1, [R0]
@@ -113,10 +117,41 @@ wait_pa15_low
 
 	
 emergency_action
+    CPSID i                     ; disable all maskable interrupts
+
+    ; Disable all NVIC IRQ lines (ICER0..2) with all-ones mask
+    MVN     R1, #0              ; 0xFFFFFFFF
+    LDR     R0, =0xE000E180     ; NVIC_ICER0
+    STR     R1, [R0]
+    LDR     R0, =0xE000E184     ; NVIC_ICER1
+    STR     R1, [R0]
+    LDR     R0, =0xE000E188     ; NVIC_ICER2
+    STR     R1, [R0]
+
+    ; Clear all pending NVIC IRQs (ICPR0..2)
+    LDR     R0, =0xE000E280     ; NVIC_ICPR0
+    STR     R1, [R0]
+    LDR     R0, =0xE000E284     ; NVIC_ICPR1
+    STR     R1, [R0]
+    LDR     R0, =0xE000E288     ; NVIC_ICPR2
+    STR     R1, [R0]
+
     BL STOP                     ; turn off motor
     BL PLAY_EMERGENCY_AUDIO     ; play audio
 
 end_isr
+	
+	MOV R0, 1000
+small_loop
+	subs r0, r0, #1
+	bne small_loop
+	
+	
+	; clear pending bit for EXTI8 (W1C - do NOT RMW here)
+    LDR R0, =EXTI_PR
+    MOV R1, #(1 << 8)
+    STR R1, [R0]
+
     POP {pc}
 
         END
