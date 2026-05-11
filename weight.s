@@ -13,7 +13,7 @@ THRESHOLD   EQU    100
 
 ; Tare offset � subtract this from raw sensor reading to get zero weight.
 ; Adjust this value to zero the sensor when no load is applied.
-TARE_OFFSET EQU    65000            ; change to calibration value
+TARE_OFFSET EQU    66000            ; change to calibration value
     
     ;Define the Code Area
     AREA    |.text|, CODE, READONLY
@@ -102,6 +102,7 @@ read_loop
     ; Threshold check
     LDR     R2, =THRESHOLD
     CMP     R7, R2
+
     LDR     R3, =GPIOC_BSRR
     BGT     weight_over
 

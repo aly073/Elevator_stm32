@@ -159,7 +159,7 @@ check_line6
 check_line8
     TST R1, #(1 << 8)
     BEQ exti9_5_end
-    BL limit_switch_isr
+ ;   BL limit_switch_isr
 
 
 exti9_5_end

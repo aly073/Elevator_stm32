@@ -341,8 +341,8 @@ config    FUNCTION
     STRH    R1, [R0, #0x00]
 	
 	; startup routine using limit switch
-    BL limit_switch_init
-	BL 		GO_DOWN
+;    BL limit_switch_init
+;	BL 		GO_DOWN
 	
 
 	POP     {R0-R12, PC}

@@ -99,11 +99,11 @@ startup_action
 	
 	BL GO_UP
 
-wait_pa15_low
+wait_pa5_low
     LDR     r0, =GPIOA_IDR
     LDR     r1, [r0]
-    TST     r1, #(1 << 15)
-    BNE     wait_pa15_low	
+    TST     r1, #(1 << 5)
+    BNE     wait_pa5_low	
 	
 	BL STOP
     
@@ -141,10 +141,12 @@ emergency_action
 
 end_isr
 	
-	MOV R0, 1000
+	MOV R0, #1000
 small_loop
 	subs r0, r0, #1
 	bne small_loop
+	
+
 	
 	
 	; clear pending bit for EXTI8 (W1C - do NOT RMW here)
