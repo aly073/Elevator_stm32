@@ -6,12 +6,21 @@
     IMPORT  PLAY_MOVEMENT_AUDIO
     IMPORT  PLAY_STOP_AUDIO
     IMPORT  check_weight
+    IMPORT  current_num
+	IMPORT	currentFloor
+    IMPORT  OPEN_DOOR
+    IMPORT  CLOSE_DOOR
+    IMPORT  CLOSE_ALL_DOORS
+	IMPORT 	initialized
+
 
 ; Mask for PB1 and PB11 (Bits 1 and 11) = 0x0802
 DIR_MASK EQU 0x0802 
 
 GO_DOWN FUNCTION
-        PUSH    {R0-R3, LR}
+        PUSH    {R0-R3, LR}		
+		
+		
         LDR     R0, =GPIOB_ODR
         LDR     R2, [R0]            ; Read current state
         LDR     R3, =DIR_MASK
@@ -22,7 +31,10 @@ GO_DOWN FUNCTION
         BEQ     DONE_DOWN           ; Early exit if already going DOWN
 
         ; Check weight < Threshold
-        ; BL check_weight
+        BL check_weight
+		
+		;CLOSE ALL DOORS 
+        BL      CLOSE_ALL_DOORS
         
         ; Apply new state while preserving other bits
         BIC     R2, R2, R3          ; Clear PB1/PB11
@@ -31,6 +43,10 @@ GO_DOWN FUNCTION
         STR     R2, [R0]
 
         ; === Trigger Audio (Only plays if we weren't already going down)
+        LDR     R0, =initialized
+        LDR     R1, [R0]
+        CMP     R1, #0
+        BEQ     DONE_DOWN
         BL      PLAY_MOVEMENT_AUDIO
 
 DONE_DOWN
@@ -50,7 +66,17 @@ STOP FUNCTION
         BIC     R2, R2, R3          ; Clear direction bits
         STR     R2, [R0]
 
-        ; === Trigger Audio (Only plays if we were actually moving)
+        ;Open the door for specific floor
+        LDR     R0, =currentFloor
+        LDRB R0, [R0]
+        ;MOVS R0, #1
+        BL      OPEN_DOOR
+
+        ; === Trigger Audio if initialized
+        LDR     R0, =initialized
+        LDR     R1, [R0]
+        CMP     R1, #0
+        BEQ     DONE_STOP
         BL      PLAY_STOP_AUDIO
 
 DONE_STOP
@@ -58,7 +84,10 @@ DONE_STOP
         ENDFUNC
 
 GO_UP FUNCTION
+
         PUSH    {R0-R3, LR}
+		
+		
         LDR     R0, =GPIOB_ODR
         LDR     R2, [R0]
         LDR     R3, =DIR_MASK
@@ -69,13 +98,20 @@ GO_UP FUNCTION
         BEQ     DONE_UP             ; Early exit if already going UP
 
         ; Check weight < Threshold
-        ; BL check_weight
+        BL check_weight
+		
+		;CLOSE ALL DOORS 
+        BL      CLOSE_ALL_DOORS
         
         BIC     R2, R2, R3          ; Clear PB1/PB11
         ORR     R2, R2,	#(1 << 1)		    ; Set UP state
         STR     R2, [R0]
 
-        ; === Trigger Audio
+        ; === Trigger Audio if initialized
+        LDR     R0, =initialized
+        LDR     R1, [R0]
+        CMP     R1, #0
+        BEQ     DONE_UP
         BL      PLAY_MOVEMENT_AUDIO
 
 DONE_UP

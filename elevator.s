@@ -4,10 +4,10 @@
 
     EXPORT  EXTI0_IRQHandler
     EXPORT  EXTI1_IRQHandler
-    EXPORT  EXTI2_IRQHandler
     EXPORT  EXTI4_IRQHandler
     EXPORT  EXTI3_IRQHandler
     EXPORT  EXTI9_5_IRQHandler
+    EXPORT  EXTI15_10_IRQHandler
     EXPORT  stopAndServe
     EXPORT  checkNextMove
     EXPORT  elevatorState
@@ -24,6 +24,7 @@
     IMPORT  STOP
     IMPORT  GO_UP
     IMPORT  rfid_isr
+    IMPORT  limit_switch_isr
 
 ; =============================================================================
 ; ELEVATOR LOGIC & INTERRUPTS
@@ -36,6 +37,9 @@ EXTI0_IRQHandler
     LDR R0, =EXTI_PR
     MOV R1, #(1 << 0)
     STR R1, [R0]           ; Clear pending bit first
+
+    cmp r10, #0
+    beq exti0_end
 
     LDR R0, =requests      ; Check Floor 1 request
     LDRB R1, [R0, #0]
@@ -56,6 +60,9 @@ EXTI1_IRQHandler
     MOV R1, #(1 << 1)
     STR R1, [R0]           ; Clear pending bit first
 
+    cmp r10, #0
+    beq exti1_end
+
     LDR R0, =requests      ; Check Floor 2 UP request
     LDRB R1, [R0, #2]
     CMP R1, #1
@@ -69,18 +76,14 @@ EXTI1_IRQHandler
 exti1_end
     POP {PC}
 
-EXTI2_IRQHandler
-    PUSH {LR}
-    LDR R0, =EXTI_PR
-    MOV R1, #(1 << 2)
-    STR R1, [R0]           ; Clear any stray EXTI2 pending bit
-    POP {PC}
-
 EXTI4_IRQHandler
     PUSH {LR}
     LDR R0, =EXTI_PR
     MOV R1, #(1 << 4)
     STR R1, [R0]           ; Clear pending bit first
+
+    cmp r10, #0
+    beq exti4_end
 
     LDR R0, =requests      ; Check Floor 2 DOWN request
     LDRB R1, [R0, #3]
@@ -100,6 +103,9 @@ EXTI3_IRQHandler
     LDR R0, =EXTI_PR
     MOV R1, #(1 << 3)
     STR R1, [R0]           ; Clear pending bit first
+
+    cmp r10, #0
+    beq exti3_end
 
     LDR R0, =requests      ; Check Floor 3 request
     LDRB R1, [R0, #4]
@@ -121,45 +127,6 @@ EXTI9_5_IRQHandler
     LDR R1, [R0]
 
 ; Must check manually which bit is 1 to know which line from 5-9 triggered the interrupt
-check_line9
-    TST R1, #(1<<9)
-    BEQ check_line7
-    BL rfid_isr
-    B exti9_5_end
-
-check_line7
-    TST R1, #(1 << 7)
-    BEQ check_line8
-    MOV R2, #(1 << 7)
-    STR R2, [R0]           ; Clear pending bit
-
-    LDR R3, =requests      ; Check Floor 2 car button request
-    LDRB R4, [R3, #1]
-    CMP R4, #1
-    BEQ exti9_5_end        ; Early exit if already requested
-
-    MOV R4, #1
-    STRB R4, [R3, #1]
-    LDR R0, =elevatorState
-    LDRB R0, [R0]
-    BL checkNextMove
-    B exti9_5_end
-
-check_line8
-    TST R1, #(1 << 8)
-    BEQ check_line5
-    MOV R2, #(1 << 8)
-    STR R2, [R0]           ; Clear pending bit
-
-    LDR R3, =currentFloor  ; PB8: Floor 1 sensor
-    LDRB R3, [R3]
-    CMP R3, #1
-    BEQ exti9_5_end        ; Early exit if we are already at Floor 1
-
-    MOV R0, #1
-    BL handle_sensor
-    B exti9_5_end
-
 check_line5
     TST R1, #(1 << 5)
     BEQ check_line6
@@ -177,7 +144,7 @@ check_line5
 
 check_line6
     TST R1, #(1 << 6)
-    BEQ exti9_5_end
+    BEQ check_line8
     MOV R2, #(1 << 6)
     STR R2, [R0]           ; Clear pending bit
 
@@ -189,7 +156,63 @@ check_line6
     MOV R0, #3
     BL handle_sensor
 
+check_line8
+    TST R1, #(1 << 8)
+    BEQ exti9_5_end
+ ;   BL limit_switch_isr
+
+
 exti9_5_end
+    POP {PC}
+
+; STM32 handles interrupt lines 10 to 15 in the same IRQ
+EXTI15_10_IRQHandler
+    PUSH {LR}
+    LDR R0, =EXTI_PR
+    LDR R1, [R0]
+
+check_line11
+    TST R1, #(1<<11)
+    BEQ check_line15
+    BL  rfid_isr
+    B   exti15_10_end
+
+check_line15
+    TST R1, #(1 << 15)
+    BEQ check_line12
+    MOV R2, #(1 << 15)
+    STR R2, [R0]           ; Clear pending bit
+
+    LDR R3, =currentFloor  ; PA15: Floor 1 sensor
+    LDRB R3, [R3]
+    CMP R3, #1
+    BEQ exti15_10_end      ; Early exit if we are already at Floor 1
+
+    MOV R0, #1
+    BL handle_sensor
+    B exti15_10_end
+
+check_line12
+    TST R1, #(1 << 12)
+    BEQ exti15_10_end
+    MOV R2, #(1 << 12)
+    STR R2, [R0]           ; Clear pending bit
+
+    cmp r10, #0
+    beq exti15_10_end
+
+    LDR R3, =requests      ; Check Floor 2 car button request
+    LDRB R4, [R3, #1]
+    CMP R4, #1
+    BEQ exti15_10_end      ; Early exit if already requested
+
+    MOV R4, #1
+    STRB R4, [R3, #1]
+    LDR R0, =elevatorState
+    LDRB R0, [R0]
+    BL checkNextMove
+
+exti15_10_end
     POP {PC}
 
 ; =============================================================================

@@ -15,7 +15,10 @@
 	IMPORT  hardware_init_audio
     IMPORT  weight_sensor_init
     IMPORT  bluetooth_init
-    IMPORT  rfid_init
+    IMPORT  doors_init
+	IMPORT 	rfid_init
+	IMPORT 	GO_DOWN
+    IMPORT  limit_switch_init
 
 
 ;============================================================
@@ -35,35 +38,43 @@
 ;     - PA1: Floor 2 up button (EXTI1)
 ;     - PB4: Floor 2 down button (EXTI4)
 ;     - PB3: Floor 3 request button (EXTI3)
-;     - PB7: Floor 2 cabin button (inside elevator) (EXTI7)
+;     - PA12: Floor 2 cabin button (inside elevator) (EXTI12)
 ;
 ;   - Sensors (functional mapping used by IRQ code):
-;     - PB8: Floor 1 sensor (EXTI8)
+;     - PA15: Floor 1 sensor (EXTI15)
 ;     - PB5: Floor 2 sensor (EXTI5)
-;     - PB6: Floor 3 sensor (EXTI6) -- SHOULD BE CHANGED
+;     - PB6: Floor 3 sensor (EXTI6)
 ;
 ;   - LED Matrix:
-;     - SPI Pins: PA5 (CLK), PA7 (DIN), PA4 (CS)
+;     - SPI Pins: PB13 (CLK), PB15 (DIN), PA4 (CS)
 
 ;    - RFID:
-;      - SPI Pins: PA5 (CLK), PA7 (DIN), PA6 (MISO), PB12 (CS), PA8 (RST)
+;      - SPI Pins: PA5 (CLK), PA7 (DIN), PA6 (MISO), PB12 (CS), PA11 (IRQ), PA8 (RST)
 ;
 ;	- Audio:
 ;	  - PA2 (RX)
-;      - PA3 (TX)
+;     - PA3 (TX)
 ;
 ;	- Load Cell:
 ;	  - PB14: DT
-;	  - PB15: SCK
+;	  - PB10: SCK
 
 ;
 ;	- Bluetooth:
 ;	  - PA9: TX
 ;	  - PA10: RX
 
+;
+;   - Servo (for door control):
+;     - PB7: first floor door (TIM4_CH2 PWM output)
+;     - PB8: second floor door (TIM4_CH3 PWM output)
+;     - PB9: third floor door (TIM4_CH4 PWM output)
+
+;   - Limit Switch: PB2 - EXTI2
+;
+
 ;    - REMAINING PINS:
-;        PA8, PA11, PA12, PA15
-;        PB2, PB9, PB10, PB13
+;        PB2
 
 ;============================================================
 
@@ -73,9 +84,6 @@
 
 config    FUNCTION
     PUSH    {R0-R12, LR}
-	
-	BL 		rfid_init 	; Keep this first because it doesnt modify safely (breaks if you try to change)
-	
     ; Enable clocks for AFIO, GPIOB, GPIOC
     LDR     R0, =RCC_APB2ENR
     LDR     R1, [R0]
@@ -93,21 +101,30 @@ config    FUNCTION
     
     LDR R0, =RCC_APB2ENR
     LDR R1, [R0]
-    LDR R2, =0x100D
+    LDR R2, =0x000D            ; AFIO, GPIOA, GPIOB (SPI1 bit 12 is 0)
     ORR R1, R1, R2
     STR R1, [R0]
     
     LDR R0, =RCC_APB1ENR
     LDR R1, [R0]
-    ORR R1, R1, #0x01
+    LDR R2, =0x4001            ; SPI2 (bit 14) and TIM2 (bit 0)
+    ORR R1, R1, R2
     STR R1, [R0]
 
     ; --- GPIOA CONFIGURATION ---
     LDR R0, =GPIOA_BASE
     LDR R1, =0xB8B38888
     STR R1, [R0, #GPIOx_CRL]
+    LDR R1, [R0, #GPIOx_CRH]
+    LDR R2, =0xF00F0000
+    BIC R1, R1, R2
+    LDR R2, =0x80080000
+    ORR R1, R1, R2
+    STR R1, [R0, #GPIOx_CRH]
     MOV R1, #CS_PIN
     ORR R1, R1, #(1 << 6)      ; <--- MODIFIED: Set PA6 bit in ODR to activate Pull-Up
+    ORR R1, R1, #(1 << 12)
+    ORR R1, R1, #(1 << 15)
     STR R1, [R0, #GPIOx_ODR]
 
 	; Disable JTAG but keep SWD (SWJ_CFG = 010)
@@ -125,62 +142,72 @@ config    FUNCTION
     STR R1, [R0, #GPIOx_CRL]
 
     LDR R1, [R0, #GPIOx_CRH]
-    LDR R2, =0x0000FF0F
+    LDR R2, =0xF0F0FF0F        ; Mask for PB15, PB13, PB11, PB10, PB9, PB8
     BIC R1, R1, R2
-    LDR R2, =0x00007708
+    LDR R2, =0xB0B07708        ; PB15=AFPP(B), PB13=AFPP(B), PB11=In(8), PB10=In(8), PB9/PB8=Servo(7)
     ORR R1, R1, R2
     STR R1, [R0, #GPIOx_CRH]
     
     LDR R1, [R0, #GPIOx_ODR]
-    LDR R2, =0x00000138        ; PB3/PB4 pull-down, PB5/PB6/PB8 pull-up
+    LDR R2, =0x00000178        ; PB3/PB4 pull-down, PB5/PB6 pull-up
     BIC R1, R1, R2
-    LDR R2, =0x0160
+    LDR R2, =0x0060
     ORR R1, R1, R2
     STR R1, [R0, #GPIOx_ODR]
 
     ; --- AFIO EXTI MAPPING ---
     ; EXTICR1: Controls EXTI0, EXTI1, EXTI2, EXTI3
-    ; PA0 (0x0), PA1 (0x0), PA2 (0x0), PB3 (0x1) -> Target value: 0x1000
+    ; PA0 (0x0), PA1 (0x0), PB2 (0x1), PB3 (0x1) -> Target value: 0x1100
     LDR R0, =AFIO_EXTICR1
-    LDR R1, =0x1000            ; EXTI3 mapped to PB3
+    LDR R1, =0x1100            ; EXTI3 mapped to PB3
     STR R1, [R0]
 
     ; EXTICR2: Controls EXTI4, EXTI5, EXTI6, EXTI7
-    ; PB4 (0x1), PB5 (0x1), PB6 (0x1), PB7 (0x1)
-    ; EXTI7: [15:12] = 1 (PB)
+    ; PB4 (0x1), PB5 (0x1), PB6 (0x1), PA (0x0)
+    ; EXTI7: [15:12] = 0 (PA)
     ; EXTI6: [11:8]  = 1 (PB)
     ; EXTI5: [7:4]   = 1 (PB)
     ; EXTI4: [3:0]   = 1 (PB)
-    ; Target hex: 1111
+    ; Target hex: 0111
     LDR R0, =AFIO_EXTICR2
-    LDR R1, =0x1111            
+    LDR R1, =0x0111
     STR R1, [R0]
 
     ; EXTICR3: Controls EXTI8, EXTI9, EXTI10, EXTI11
-    ; PB8 (0x1)
-    ; EXTI8: [3:0] = 1 (PB)
-    ; Target hex: 0001
+    ; PA8 (0x0)
+    ; PB11 (0X1)
+    ; EXTI8: [3:0] = 0 (PA)
+    ; Target hex: 1000
     LDR R0, =AFIO_EXTICR3
-    LDR R1, =0x0011            
+    LDR R1, =0x1000
+    STR R1, [R0]
+
+    ; EXTICR4: Controls EXTI12, EXTI13, EXTI14, EXTI15
+    ; PA12 (0x0), PA15 (0x0)
+    ; EXTI12: [3:0]   = 0 (PA)
+    ; EXTI15: [15:12] = 0 (PA)
+    ; Target hex: 0000
+    LDR R0, =AFIO_EXTICR4
+    LDR R1, =0x0000
     STR R1, [R0]
 
 
     ; --- EXTI EDGE CONFIGURATION ---
     LDR R0, =EXTI_IMR
-    LDR R1, =0x01FB
+    LDR R1, =0x907B
     STR R1, [R0]
     
     LDR R0, =EXTI_RTSR
-    LDR R1, =0x009B            ; Rising edge for lines 0,1,3,4,7
+    LDR R1, =0x101B            ; Rising edge for lines 0,1,3,4,12
     STR R1, [R0]
     
     LDR R0, =EXTI_FTSR         ; <--- MODIFIED: Load Falling Trigger Selection Register
-    LDR R1, =0x0160            ; <--- MODIFIED: Falling edge for lines 5, 6, 8
+    LDR R1, =0x8060            ; <--- MODIFIED: Falling edge for lines 5, 6, 15
     STR R1, [R0]
 
     ; Clear stale pending EXTI flags before enabling NVIC
     LDR R0, =EXTI_PR
-    LDR R1, =0x01FB
+    LDR R1, =0x907B
     STR R1, [R0]
 
     ; --- TIMER 2 CONFIGURATION ---
@@ -193,15 +220,19 @@ config    FUNCTION
     STR R1, [R0, #0x0C]
     MOV R1, #0
     STR R1, [R0, #0x00]
-	
+
     ; --- NVIC CONFIGURATION ---
     LDR R0, =NVIC_ISER0
     LDR R1, =0x108006C0
     STR R1, [R0]
+    LDR R0, =NVIC_ISER1
+    LDR R1, =0x00000100
+    STR R1, [R0]
 	
 	BL hardware_init_audio
     BL bluetooth_init
-    ; BL weight_sensor_init
+    BL doors_init
+    BL weight_sensor_init
 	
 ;============================================================
 ; INITIAL STATE
@@ -237,9 +268,11 @@ config    FUNCTION
     STR R1, [R0]
     LDR R0, =pending_dir
     STR R1, [R0]
+	BL rfid_init
 
     BL matrix_init
     BL draw_initial_state
+
 
 
 ;============================================================
@@ -306,6 +339,11 @@ config    FUNCTION
     LDRH    R1, [R0, #0x00]
     ORR     R1, R1, #1
     STRH    R1, [R0, #0x00]
+	
+	; startup routine using limit switch
+;    BL limit_switch_init
+;	BL 		GO_DOWN
+	
 
 	POP     {R0-R12, PC}
 	ENDFUNC

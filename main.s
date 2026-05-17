@@ -1,11 +1,12 @@
     IMPORT  TIM2_IRQHandler
     IMPORT  EXTI0_IRQHandler
     IMPORT  EXTI1_IRQHandler
-    IMPORT  EXTI2_IRQHandler
     IMPORT  EXTI4_IRQHandler
     IMPORT  EXTI3_IRQHandler
     IMPORT  EXTI9_5_IRQHandler
+    IMPORT  EXTI15_10_IRQHandler
 	IMPORT  USART1_IRQHandler
+	IMPORT 	TIM1_UP_IRQHandler
     AREA    RESET, DATA, READONLY
     ALIGN   2
     EXPORT  __Vectors
@@ -17,15 +18,20 @@ __Vectors
     SPACE   80
     DCD     EXTI0_IRQHandler
     DCD     EXTI1_IRQHandler
-    DCD     EXTI2_IRQHandler
+    DCD     0
     DCD     EXTI3_IRQHandler
     DCD     EXTI4_IRQHandler
     SPACE   48
     DCD     EXTI9_5_IRQHandler
-    SPACE   16
+    DCD     0                       ; IRQ 24: TIM1_BRK (not used)
+    DCD     TIM1_UP_IRQHandler      ; IRQ 25: TIM1_UP
+    DCD     0                       ; IRQ 26: TIM1_TRG_COM (not used)
+    DCD     0                       ; IRQ 27: TIM1_CC (not used)
     DCD     TIM2_IRQHandler
     SPACE   32
     DCD     USART1_IRQHandler
+    SPACE   8
+    DCD     EXTI15_10_IRQHandler
 __Vectors_End
 __Vectors_Size  EQU __Vectors_End - __Vectors
 
@@ -51,8 +57,8 @@ __Vectors_Size  EQU __Vectors_End - __Vectors
     IMPORT  GO_DOWN
     IMPORT  STOP
     IMPORT  GO_UP
-    IMPORT  main_loop
-	IMPORT 	rfid_init
+    IMPORT  OPEN_DOOR
+	IMPORT  CLOSE_ALL_DOORS
 
 ;============================================================
 ; Main function
@@ -64,9 +70,14 @@ Reset_Handler FUNCTION
     ENDFUNC
 
 __main FUNCTION
-
 	BL		config
-    B       main_loop
+	
+	;MOVS R0, #1
+    ;BL      OPEN_DOOR
+
+main_loop
+    WFI			; Put CPU in low power state waiting for interrupt
+    B main_loop
 	ENDFUNC
 
     END

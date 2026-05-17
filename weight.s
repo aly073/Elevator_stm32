@@ -5,103 +5,117 @@
     EXPORT weight_sensor_init
     IMPORT PLAY_WARNING_AUDIO
     IMPORT delay_systick
+        
+        
+; THE FOLLOWING VALUES ASSUME A 5V INPUT TO THE HX711 ADC
+; Max weight allowed (raw value after tare subtraction)
+THRESHOLD   EQU    100
 
-; Max weight allowed
-THRESHOLD   EQU    50
-
+; Tare offset � subtract this from raw sensor reading to get zero weight.
+; Adjust this value to zero the sensor when no load is applied.
+TARE_OFFSET EQU    66000            ; change to calibration value
+    
     ;Define the Code Area
     AREA    |.text|, CODE, READONLY
 
-; initialize pins needed for weight sensor
+; initialize pins
 weight_sensor_init
-    PUSH {R1, LR}            ; Corrected: Push LR, not PC
-
-	LDR     R0, =RCC_APB2ENR
+    PUSH    {R0,R1, LR}
+    ; Enable Port B and C clocks
+    LDR     R0, =RCC_APB2ENR
     LDR     R1, [R0]
-    ORR     R1, R1, #0x18       ; CHANGED: Bit 3 (IOPB) and Bit 4 (IOPC)
+    ORR     R1, R1, #0x18
     STR     R1, [R0]
-
-    ; Configure PC13 as Output (LED)
+    
+    ; Configure PC13 as Output
     LDR     R0, =GPIOC_CRH
     LDR     R1, [R0]
     BIC     R1, R1, #(0xF << 20)
     ORR     R1, R1, #(0x2 << 20)
     STR     R1, [R0]
-
-    ; Configure PB14 (DT, In) and PB15 (SCK, Out)
-    LDR     R0, =GPIOB_CRH      ; CHANGED: Pins 14/15 are in CRH
+    
+    ; Configure GPIOB: PB14 Input Floating, PB10 Output Push-Pull
+    LDR     R0, =GPIOB_CRH
     LDR     R1, [R0]
-    ; Clear bits 24-31 (PB14 and PB15)
-    BIC     R1, R1, #(0xFF << 24)
-    ; PB14: Input Floating (0x4), PB15: Output 2MHz (0x2) -> 0x24
-    ORR     R1, R1, #(0x24 << 24)
+    
+    ; Setup PB14 as input floating (CNF=01, MODE=00 -> 0x4)
+    BIC     R1, R1, #(0xF << 24)
+    ORR     R1, R1, #(0x4 << 24)
+    
+    ; Setup PB10 as output push-pull, 2MHz (CNF=00, MODE=10 -> 0x2)
+    BIC     R1, R1, #(0xF << 8)
+    ORR     R1, R1, #(0x2 << 8)
+    
     STR     R1, [R0]
+    POP     {R0,R1, PC}
 
-    POP {R1, PC}             ; Corrected: Pop into PC to return
-
-; checks weight. acts like while (weight > Threshold) { play warning sound } return
+; checks weight, applies tare offset, and updates LED
 check_weight
-	PUSH {R1, LR}
+    PUSH    {R0-R7, LR}
 
-    ; Wait for HX711 Ready (PB14 goes LOW)
+    ; Wait for HX711 Ready (PB14 LOW)
     LDR     R4, =GPIOB_IDR
 wait_ready
     LDR     R5, [R4]
-    TST     R5, #(1 << 14)      ; CHANGED: Check bit 14
+    TST     R5, #(1 << 14)
     BNE     wait_ready
 
-    ; Read 24 Bits
+    ; Read 24 bits
     MOV     R6, #24
     MOV     R7, #0
 read_loop
     LDR     R0, =GPIOB_BSRR
-    MOV     R1, #(1 << 15)      ; CHANGED: PB15 (SCK) HIGH
-    STR     R1, [R0]        
+    MOV     R1, #(1 << 10)      ; SCK HIGH (PB10 Set)
+    STR     R1, [R0]
     NOP
     NOP
-    MOV     R1, #(1 << 31)      ; CHANGED: PB15 (SCK) LOW (15 + 16 = 31)
-    STR     R1, [R0]        
-    
+    MOV     R1, #(1 << 26)      ; SCK LOW (PB10 Reset)
+    STR     R1, [R0]
+
     LDR     R5, [R4]
-    TST     R5, #(1 << 14)      ; CHANGED: Check PB14
-    ITE     NE                  ; Conditional instruction for compact bit handling
+    TST     R5, #(1 << 14)      ; Read DOUT (PB14)
+    ITE     NE
     MOVNE   R5, #1
     MOVEQ   R5, #0
-    
+
     LSL     R7, R7, #1
     ORR     R7, R7, R5
-    
     SUBS    R6, R6, #1
     BNE     read_loop
 
-    ; 25th pulse
+    ; 25th pulse (gain = 128)
     LDR     R0, =GPIOB_BSRR
-    MOV     R1, #(1 << 15)      ; CHANGED: PB15 HIGH
+    MOV     R1, #(1 << 10)      ; SCK HIGH (PB10 Set)
     STR     R1, [R0]
     NOP
-    MOV     R1, #(1 << 31)      ; CHANGED: PB15 LOW
+    MOV     R1, #(1 << 26)      ; SCK LOW (PB10 Reset)
     STR     R1, [R0]
 
-    ; Sign Extension
+    ; Sign extend to 32-bit
     LSL     R7, R7, #8
     ASR     R7, R7, #8
 
-    ; Threshold Logic
+    ; Apply tare offset (subtract constant)
+    LDR     R0, =TARE_OFFSET
+    SUB     R7, R7, R0          ; R7 = raw_value - tare_offset
+
+    ; Threshold check
     LDR     R2, =THRESHOLD
     CMP     R7, R2
+
     LDR     R3, =GPIOC_BSRR
     BGT     weight_over
 
 weight_under
-    MOV     R1, #(1 << 13)      ; LED Off (PC13 High)
+    MOV     R1, #(1 << 13)      ; LED off (PC13 high)
     STR     R1, [R3]
-    POP 	{R1, PC}
-
+    POP     {R0-R7, PC}
+    
 weight_over
     MOV     R1, #(1 << 29)      ; LED On (PC13 Low)
     STR     R1, [R3]
-	BL		PLAY_WARNING_AUDIO
-	BL 		delay_audio
+    BL      PLAY_WARNING_AUDIO
+    BL      delay_audio
     B       wait_ready
 
 ; small delay for audio

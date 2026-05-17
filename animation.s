@@ -1,5 +1,5 @@
 ; =============================================================================
-; 6. MATRIX ANIMATION DRIVER
+; 6. MATRIX ANIMATION DRIVER (90 Deg CCW Adjusted)
 ; =============================================================================
 
     AREA    animation, CODE, READONLY
@@ -60,49 +60,40 @@ TIM2_IRQHandler
 
     MOV R7, #1
 row_loop
-    SUB R2, R7, #1
+    SUB R2, R7, #1             ; R2 = hardware row index (now physically a column)
+    LDRB R9, [R4, R2]          ; R9 = current_byte for this column
+    LDRB R10, [R5, R2]         ; R10 = target_byte for this column
+
     LDR R3, =target_num
     LDR R3, [R3]
     LDR R8, =current_num
     LDR R8, [R8]
     CMP R3, R8
-    BGT calc_up
+    BGT calc_up_shift          ; If Target > Current, scroll up
 
-calc_down
-    ADD R3, R2, R6
-    CMP R3, #8
-    BLT load_curr_down
-    CMP R3, #11
-    BLT load_gap_down
-    SUB R3, R3, #11
-    LDRB R8, [R5, R3]
-    B send_row
-load_curr_down
-    LDRB R8, [R4, R3]
-    B send_row
-load_gap_down
-    MOV R8, #0
-    B send_row
+calc_down_shift
+    ; Shift logic for downward scroll
+    ; Build a 32-bit frame: [Target(8)][Gap(3)][Current(8)]
+    LSL R10, R10, #11          ; Shift Target into upper bits [18:11]
+    ORR R8, R9, R10            ; Combine with Current at [7:0]
+    LSR R8, R8, R6             ; Shift the viewport down by anim_step
+    B format_send
 
-calc_up
-    SUBS R3, R2, R6
-    CMP R3, #0
-    BGE load_curr_up
-    CMP R3, #-3
-    BGE load_gap_up
-    ADD R3, R3, #11
-    LDRB R8, [R5, R3]
-    B send_row
-load_curr_up
-    LDRB R8, [R4, R3]
-    B send_row
-load_gap_up
-    MOV R8, #0
+calc_up_shift
+    ; Shift logic for upward scroll
+    ; Build a 32-bit frame: [Current(8)][Gap(3)][Target(8)]
+    LSL R9, R9, #11            ; Shift Current into upper bits [18:11]
+    ORR R8, R10, R9            ; Combine with Target at [7:0]
+    MOV R3, #11                ; Max shift gap is 11
+    SUB R3, R3, R6             ; Invert step (11 - anim_step)
+    LSR R8, R8, R3             ; Shift the viewport up
 
-send_row
-    LSL R0, R7, #8
-    ORR R0, R0, R8
+format_send
+    AND R8, R8, #0xFF          ; Mask out the 8 visible pixels for this column
+    LSL R0, R7, #8             ; R7 is hardware row address (1-8)
+    ORR R0, R0, R8             ; Combine address + shifted pixel data
     BL send_16bit
+    
     ADD R7, R7, #1
     CMP R7, #9
     BLT row_loop
@@ -167,13 +158,13 @@ send_16bit
     LDR R2, [R1, #0x0C]
     BIC R2, #CS_PIN
     STR R2, [R1, #0x0C]
-    LDR R1, =SPI1_BASE
-    STR R0, [R1, #0x0C]
+    LDR R1, =SPI2_BASE
+    STRH R0, [R1, #0x0C]
 wait_rxne
     LDR R2, [R1, #0x08]
     TST R2, #0x01
     BEQ wait_rxne
-    LDR R2, [R1, #0x0C]
+    LDRH R2, [R1, #0x0C]
 wait_bsy
     LDR R2, [R1, #0x08]
     TST R2, #0x80
@@ -186,7 +177,7 @@ wait_bsy
 
 matrix_init
     PUSH {LR}
-    LDR R0, =SPI1_BASE
+    LDR R0, =SPI2_BASE
     LDR R1, =0x0B1C
     STR R1, [R0, #0x00]
     ORR R1, #0x0040
@@ -235,8 +226,10 @@ is_1
 
     AREA    animation_data, DATA, READONLY
     ALIGN   2
-bitmap1 DCB 0x18, 0x38, 0x18, 0x18, 0x18, 0x18, 0x18, 0x3C
-bitmap2 DCB 0x3C, 0x66, 0x06, 0x0C, 0x18, 0x30, 0x60, 0x7E
-bitmap3 DCB 0x3C, 0x66, 0x06, 0x1C, 0x06, 0x06, 0x66, 0x3C
+; Bitmaps have been pre-rotated 90-degrees clockwise 
+; so they render upright on your rotated screen
+bitmap1 DCB 0x00, 0x00, 0x82, 0xFF, 0xFF, 0x80, 0x00, 0x00
+bitmap2 DCB 0x00, 0xC2, 0xE3, 0xB1, 0x99, 0x8F, 0x86, 0x00
+bitmap3 DCB 0x00, 0x42, 0xC3, 0x89, 0x89, 0xFF, 0x76, 0x00
 
     END
