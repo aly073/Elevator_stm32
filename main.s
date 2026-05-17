@@ -6,7 +6,6 @@
     IMPORT  EXTI3_IRQHandler
     IMPORT  EXTI9_5_IRQHandler
 	IMPORT  USART1_IRQHandler
-	IMPORT 	TIM1_UP_IRQHandler
     AREA    RESET, DATA, READONLY
     ALIGN   2
     EXPORT  __Vectors
@@ -23,10 +22,7 @@ __Vectors
     DCD     EXTI4_IRQHandler
     SPACE   48
     DCD     EXTI9_5_IRQHandler
-    DCD     0                       ; IRQ 24: TIM1_BRK (not used)
-    DCD     TIM1_UP_IRQHandler      ; IRQ 25: TIM1_UP
-    DCD     0                       ; IRQ 26: TIM1_TRG_COM (not used)
-    DCD     0                       ; IRQ 27: TIM1_CC (not used)
+    SPACE   16
     DCD     TIM2_IRQHandler
     SPACE   32
     DCD     USART1_IRQHandler
@@ -42,6 +38,21 @@ __Vectors_Size  EQU __Vectors_End - __Vectors
     ;includes
     GET     registers.inc
     IMPORT  config
+    IMPORT  elevatorState
+    IMPORT  currentFloor
+    IMPORT  requests
+    IMPORT  current_num
+    IMPORT  target_num
+    IMPORT  anim_step
+    IMPORT  anim_active
+    IMPORT  pending_stop
+    IMPORT  pending_dir
+    IMPORT  delay_systick
+    IMPORT  GO_DOWN
+    IMPORT  STOP
+    IMPORT  GO_UP
+    IMPORT  main_loop
+	IMPORT 	rfid_init
 
 ;============================================================
 ; Main function
@@ -55,9 +66,6 @@ Reset_Handler FUNCTION
 __main FUNCTION
 
 	BL		config
-	
-main_loop
-	WFI
     B       main_loop
 	ENDFUNC
 

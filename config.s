@@ -240,7 +240,6 @@ config    FUNCTION
 
     BL matrix_init
     BL draw_initial_state
-    BL rfid_init
 
 
 ;============================================================
